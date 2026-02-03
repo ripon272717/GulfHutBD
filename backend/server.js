@@ -21,11 +21,13 @@ app.set('trust proxy', 1); // এটি যোগ করো
 
 // CORS কনফিগারেশন - এটি Vercel থেকে রিকোয়েস্ট আসার অনুমতি দিবে
 app.use(cors({
-  origin: ['https://gulf-hut-bd.vercel.app', 'http://localhost:3000'], 
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: 'https://gulf-hut-bd.vercel.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true, // এটি কুকি পাঠানোর জন্য মাস্ট
 }));
+
+// এটি কুকি সেটিংসের জন্য রেন্ডারকে বিশ্বাস করতে সাহায্য করবে
+app.set('trust proxy', 1);
 
 // মিডলওয়্যার
 app.use(express.json());

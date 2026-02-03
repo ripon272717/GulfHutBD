@@ -2,24 +2,17 @@ import { fetchBaseQuery, createApi } from '@reduxjs/toolkit/query/react';
 import { BASE_URL } from '../constants';
 import { logout } from './authSlice';
 
-// কাস্টম বেস কুয়েরি যেখানে credentials যোগ করা হয়েছে
+// fetchBaseQuery কনফিগারেশন
 const baseQuery = fetchBaseQuery({
   baseUrl: BASE_URL,
-  // এটি খুবই জরুরি: এটি ব্রাউজারকে বলে যেন রিকোয়েস্টের সাথে কুকি পাঠায়
-  prepareHeaders: (headers) => {
-    headers.set('credentials', 'include');
-    return headers;
-  },
-  // আলাদা ডোমেইনের ক্ষেত্রে এটি অনেক সময় সরাসরি fetch অপশনেও দিতে হয়
-  fetchFn: (input, init) => {
-    return fetch(input, { ...init, credentials: 'include' });
-  },
+  // এটিই সবচেয়ে গুরুত্বপূর্ণ লাইন যা ভার্সেল থেকে রেন্ডারে কুকি পাঠাতে বাধ্য করবে
+  credentials: 'include', 
 });
 
 async function baseQueryWithAuth(args, api, extra) {
   const result = await baseQuery(args, api, extra);
-  
-  // যদি ব্যাকএন্ড থেকে 401 (Unauthorized) আসে, তবে ইউজারকে লগআউট করে দাও
+
+  // যদি ব্যাকএন্ড থেকে 401 Unauthorized এরর আসে, তার মানে ইউজার লগইন নেই
   if (result.error && result.error.status === 401) {
     api.dispatch(logout());
   }
