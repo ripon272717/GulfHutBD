@@ -7,24 +7,25 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    email: {
+    // মোবাইল নম্বর এখন প্রধান আইডি হিসেবে কাজ করবে
+    mobile: {
       type: String,
       required: true,
       unique: true,
+    },
+    // ইমেইল ঐচ্ছিক করা হয়েছে
+    email: {
+      type: String,
+      unique: true,
+      sparse: true, // এটি খালি ইমেইল থাকলেও ডুপ্লিকেট এরর দেবে না
     },
     password: {
       type: String,
       required: true,
     },
-    // প্রোফাইল পিকচারের জন্য এই ফিল্ডটি যোগ করা হলো
-    image: {
-      type: String,
-      default: '', 
-    },
     referralCode: {
       type: String,
       unique: true,
-      sparse: true, // পুরনো ইউজারদের কোড না থাকলেও যেন এরর না দেয়
     },
     referredBy: {
       type: String,
@@ -34,6 +35,10 @@ const userSchema = mongoose.Schema(
       type: Number,
       required: true,
       default: 0,
+    },
+    image: {
+      type: String,
+      default: '',
     },
     isAdmin: {
       type: Boolean,
@@ -46,12 +51,12 @@ const userSchema = mongoose.Schema(
   }
 );
 
-// ইউজার পাসওয়ার্ড ম্যাচ করার ফাংশন
+// পাসওয়ার্ড ম্যাচ করার মেথড
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// পাসওয়ার্ড হ্যাশ করার ফাংশন (সেভ করার আগে)
+// ডাটা সেভ করার আগে পাসওয়ার্ড হ্যাশ করার মিডলওয়্যার
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     next();

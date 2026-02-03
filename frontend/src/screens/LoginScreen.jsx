@@ -10,7 +10,8 @@ import { setCredentials } from '../slices/authSlice';
 import { toast } from 'react-toastify';
 
 const LoginScreen = () => {
-  const [email, setEmail] = useState('');
+  // এখন 'email' এর বদলে 'identity' স্টেট ব্যবহার করছি
+  const [identity, setIdentity] = useState('');
   const [password, setPassword] = useState('');
 
   const dispatch = useDispatch();
@@ -33,9 +34,11 @@ const LoginScreen = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
     try {
-      const res = await login({ email, password }).unwrap();
+      // ব্যাকএন্ডে 'identity' হিসেবে ডাটা পাঠানো হচ্ছে
+      const res = await login({ identity, password }).unwrap();
       dispatch(setCredentials({ ...res }));
       navigate(redirect);
+      toast.success('লগইন সফল হয়েছে');
     } catch (err) {
       toast.error(err?.data?.message || err.error);
     }
@@ -43,41 +46,52 @@ const LoginScreen = () => {
 
   return (
     <FormContainer>
-      <h1>Sign In</h1>
+      <h1 className='mb-4'>লগইন করুন</h1>
 
       <Form onSubmit={submitHandler}>
-        <Form.Group className='my-2' controlId='email'>
-          <Form.Label>Email Address</Form.Label>
+        <Form.Group className='my-2' controlId='identity'>
+          <Form.Label>মোবাইল / নাম / ইমেইল</Form.Label>
           <Form.Control
-            type='email'
-            placeholder='Enter email'
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type='text'
+            placeholder='মোবাইল নম্বর বা ইমেইল লিখুন'
+            value={identity}
+            onChange={(e) => setIdentity(e.target.value)}
+            required
           ></Form.Control>
         </Form.Group>
 
         <Form.Group className='my-2' controlId='password'>
-          <Form.Label>Password</Form.Label>
+          <Form.Label>পাসওয়ার্ড (Password)</Form.Label>
           <Form.Control
             type='password'
-            placeholder='Enter password'
+            placeholder='পাসওয়ার্ড দিন'
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
           ></Form.Control>
         </Form.Group>
 
-        <Button disabled={isLoading} type='submit' variant='primary'>
-          Sign In
+        <Button disabled={isLoading} type='submit' variant='primary' className='mt-3 w-100 py-2'>
+          প্রবেশ করুন
         </Button>
 
         {isLoading && <Loader />}
       </Form>
 
       <Row className='py-3'>
-        <Col>
-          New Customer?{' '}
-          <Link to={redirect ? `/register?redirect=${redirect}` : '/register'}>
-            Register
+        <Col className='text-center'>
+          নতুন ইউজার?{' '}
+          <Link to={redirect ? `/register?redirect=${redirect}` : '/register'} className='fw-bold'>
+            অ্যাকাউন্ট তৈরি করুন
+          </Link>
+        </Col>
+      </Row>
+
+      {/* পাসওয়ার্ড রিকভারি লিঙ্ক (ভবিষ্যতের জন্য) */}
+      <Row>
+        <Col className='text-center'>
+          <Link to='/forgot-password' style={{ fontSize: '0.85rem', color: 'gray' }}>
+            পাসওয়ার্ড ভুলে গেছেন?
           </Link>
         </Col>
       </Row>
