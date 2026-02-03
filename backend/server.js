@@ -2,7 +2,7 @@ import path from 'path';
 import express from 'express';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
-import cors from 'cors'; // ১. CORS ইম্পোর্ট করো
+import cors from 'cors'; 
 dotenv.config();
 import connectDB from './config/db.js';
 import productRoutes from './routes/productRoutes.js';
@@ -18,11 +18,12 @@ connectDB();
 
 const app = express();
 
-// ২. CORS কনফিগারেশন (এটি 'Failed to fetch' এরর দূর করবে)
+// CORS কনফিগারেশন - এটি Vercel থেকে রিকোয়েস্ট আসার অনুমতি দিবে
 app.use(cors({
-  origin: 'https://gulf-hut-bd.vercel.app', // তোমার ভার্সেল ডোমেইন
+  origin: ['https://gulf-hut-bd.vercel.app', 'http://localhost:3000'], 
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // মিডলওয়্যার
@@ -42,12 +43,13 @@ app.get('/api/config/paypal', (req, res) =>
 
 const __dirname = path.resolve();
 
-// ৩. প্রোডাকশন সেটিংস আপডেট
+// প্রোডাকশন এবং স্ট্যাটিক ফাইল সেটিংস
 if (process.env.NODE_ENV === 'production') {
+  // রেন্ডারে আপলোড করা ফাইলগুলো দেখানোর জন্য
   app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
   
   app.get('/', (req, res) => {
-    res.send('API is running in production...');
+    res.send('GulfHutBD API is running in production mode...');
   });
 } else {
   app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
