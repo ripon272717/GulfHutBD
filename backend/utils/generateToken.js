@@ -8,8 +8,10 @@ const generateToken = (res, userId) => {
   // Set JWT as an HTTP-Only cookie
   res.cookie('jwt', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV !== 'development', // Use secure cookies in production
-    sameSite: 'strict', // Prevent CSRF attacks
+    // প্রোডাকশনে (Render/Vercel) অবশ্যই true হতে হবে
+    secure: true, 
+    // আলাদা ডোমেইন (Vercel থেকে Render) এ কুকি পাঠানোর জন্য 'None' প্রয়োজন
+    sameSite: 'None', 
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   });
 };
