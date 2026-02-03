@@ -1,7 +1,7 @@
+import { useEffect } from 'react';
+import { useLocation, useParams, Link } from 'react-router-dom'; // useLocation যোগ করো
 import { Row, Col } from 'react-bootstrap';
-import { useParams } from 'react-router-dom';
 import { useGetProductsQuery } from '../slices/productsApiSlice';
-import { Link } from 'react-router-dom';
 import Product from '../components/Product';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
@@ -11,6 +11,20 @@ import Meta from '../components/Meta';
 
 const HomeScreen = () => {
   const { pageNumber, keyword } = useParams();
+  
+  // --- রেফারেল লজিক শুরু ---
+  const { search } = useLocation();
+  const sp = new URLSearchParams(search);
+  const refCode = sp.get('ref');
+
+  useEffect(() => {
+    if (refCode) {
+      // এটি ব্রাউজারের মেমোরিতে কোডটি জমিয়ে রাখবে
+      localStorage.setItem('referrerCode', refCode);
+      console.log('Referrer Code Saved:', refCode);
+    }
+  }, [refCode]);
+  // --- রেফারেল লজিক শেষ ---
 
   const { data, isLoading, error } = useGetProductsQuery({
     keyword,
@@ -34,7 +48,7 @@ const HomeScreen = () => {
         </Message>
       ) : (
         <>
-          <Meta />
+          <Meta title='Welcome to ProShop' />
           <h1>Latest Products</h1>
           <Row>
             {data.products.map((product) => (

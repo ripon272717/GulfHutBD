@@ -1,5 +1,5 @@
-import { Navbar, Nav, Container, NavDropdown, Badge } from 'react-bootstrap';
-import { FaShoppingCart, FaUser } from 'react-icons/fa';
+import { Navbar, Nav, Container, NavDropdown, Badge, Button } from 'react-bootstrap';
+import { FaShoppingCart, FaUser, FaUserPlus, FaWallet } from 'react-icons/fa';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLogoutMutation } from '../slices/usersApiSlice';
@@ -21,8 +21,6 @@ const Header = () => {
     try {
       await logoutApiCall().unwrap();
       dispatch(logout());
-      // NOTE: here we need to reset cart state for when a user logs out so the next
-      // user doesn't inherit the previous users cart and shipping
       dispatch(resetCart());
       navigate('/login');
     } catch (err) {
@@ -40,9 +38,9 @@ const Header = () => {
           </Navbar.Brand>
           <Navbar.Toggle aria-controls='basic-navbar-nav' />
           <Navbar.Collapse id='basic-navbar-nav'>
-            <Nav className='ms-auto'>
+            <Nav className='ms-auto align-items-center'>
               <SearchBox />
-              <Nav.Link as={Link} to='/cart'>
+              <Nav.Link as={Link} to='/cart' className='me-3'>
                 <FaShoppingCart /> Cart
                 {cartItems.length > 0 && (
                   <Badge pill bg='success' style={{ marginLeft: '5px' }}>
@@ -50,26 +48,64 @@ const Header = () => {
                   </Badge>
                 )}
               </Nav.Link>
+
               {userInfo ? (
-                <>
-                  <NavDropdown title={userInfo.name} id='username'>
-                    <NavDropdown.Item as={Link} to='/profile'>
-                      Profile
-                    </NavDropdown.Item>
-                    <NavDropdown.Item onClick={logoutHandler}>
-                      Logout
-                    </NavDropdown.Item>
-                  </NavDropdown>
-                </>
+                <div className='d-flex align-items-center'>
+                  {/* ব্যালেন্স এবং নামের ড্রপডাউন */}
+                  <div className='text-end me-2' style={{ lineHeight: '1.2' }}>
+                    <small className='d-block text-warning fw-bold' style={{ fontSize: '0.7rem' }}>
+                      <FaWallet size={10} className='me-1' />
+                      ${userInfo.walletBalance || 0}
+                    </small>
+                    <NavDropdown 
+                      title={userInfo.name} 
+                      id='username' 
+                      align='end'
+                      style={{ fontSize: '0.9rem', display: 'inline-block' }}
+                    >
+                      <NavDropdown.Item as={Link} to='/profile'>
+                        Edit Profile
+                      </NavDropdown.Item>
+                      <NavDropdown.Divider />
+                      <NavDropdown.Item onClick={logoutHandler}>
+                        Logout
+                      </NavDropdown.Item>
+                    </NavDropdown>
+                  </div>
+
+                  {/* প্রোফাইল ইমেজ - ক্লিক করলে প্রোফাইল পেজে যাবে */}
+                  <Link to='/profile'>
+                    <img
+                      src={userInfo.image || '/images/default-profile.png'}
+                      alt='user'
+                      style={{
+                        width: '30px',
+                        height: '30px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: '2px solid #FFD700',
+                        cursor: 'pointer',
+                      }}
+                      title='Go to Profile'
+                    />
+                  </Link>
+                </div>
               ) : (
-                <Nav.Link as={Link} to='/login'>
-                  <FaUser /> Sign In
-                </Nav.Link>
+                <div className='d-flex align-items-center'>
+                  <Nav.Link as={Link} to='/login'>
+                    <FaUser /> Sign In
+                  </Nav.Link>
+                  <Link to='/register'>
+                    <Button variant='info' size='sm' className='ms-2 text-white fw-bold'>
+                      <FaUserPlus className='me-1' /> Sign Up
+                    </Button>
+                  </Link>
+                </div>
               )}
 
               {/* Admin Links */}
               {userInfo && userInfo.isAdmin && (
-                <NavDropdown title='Admin' id='adminmenu'>
+                <NavDropdown title='Admin' id='adminmenu' className='ms-2'>
                   <NavDropdown.Item as={Link} to='/admin/productlist'>
                     Products
                   </NavDropdown.Item>

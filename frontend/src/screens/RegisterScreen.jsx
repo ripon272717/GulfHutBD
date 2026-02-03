@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Form, Button, Row, Col } from 'react-bootstrap';
+import { Form, Button, Row, Col, Alert } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
 import Loader from '../components/Loader';
 import FormContainer from '../components/FormContainer';
@@ -13,7 +13,8 @@ const RegisterScreen = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState(''); // এখানে ভুল ছিল, এখন ঠিক করা হয়েছে
+  const [referredBy, setReferredBy] = useState('');
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -27,6 +28,12 @@ const RegisterScreen = () => {
   const redirect = sp.get('redirect') || '/';
 
   useEffect(() => {
+    // লোকাল স্টোরেজ থেকে রেফারেল কোড চেক করা
+    const savedRefCode = localStorage.getItem('referrerCode');
+    if (savedRefCode) {
+      setReferredBy(savedRefCode);
+    }
+
     if (userInfo) {
       navigate(redirect);
     }
@@ -39,9 +46,20 @@ const RegisterScreen = () => {
       toast.error('Passwords do not match');
     } else {
       try {
-        const res = await register({ name, email, password }).unwrap();
+        const res = await register({ 
+          name, 
+          email, 
+          password, 
+          referredBy 
+        }).unwrap();
+        
         dispatch(setCredentials({ ...res }));
+        localStorage.removeItem('referrerCode'); 
         navigate(redirect);
+        
+        if(referredBy) {
+          toast.success('রেফারেল বোনাস সফলভাবে যোগ করা হয়েছে!');
+        }
       } catch (err) {
         toast.error(err?.data?.message || err.error);
       }
@@ -51,6 +69,13 @@ const RegisterScreen = () => {
   return (
     <FormContainer>
       <h1>Register</h1>
+      
+      {referredBy && (
+        <Alert variant='success' className='border-success shadow-sm'>
+          🎉 <strong>অভিনন্দন!</strong> আপনি একটি ইনভাইট লিঙ্ক ব্যবহার করছেন। জয়েন করলেই বোনাস পাবেন।
+        </Alert>
+      )}
+
       <Form onSubmit={submitHandler}>
         <Form.Group className='my-2' controlId='name'>
           <Form.Label>Name</Form.Label>
@@ -81,6 +106,7 @@ const RegisterScreen = () => {
             onChange={(e) => setPassword(e.target.value)}
           ></Form.Control>
         </Form.Group>
+        
         <Form.Group className='my-2' controlId='confirmPassword'>
           <Form.Label>Confirm Password</Form.Label>
           <Form.Control
@@ -91,7 +117,7 @@ const RegisterScreen = () => {
           ></Form.Control>
         </Form.Group>
 
-        <Button disabled={isLoading} type='submit' variant='primary'>
+        <Button disabled={isLoading} type='submit' variant='primary' className='mt-2 w-100'>
           Register
         </Button>
 

@@ -16,6 +16,25 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    // প্রোফাইল পিকচারের জন্য এই ফিল্ডটি যোগ করা হলো
+    image: {
+      type: String,
+      default: '', 
+    },
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true, // পুরনো ইউজারদের কোড না থাকলেও যেন এরর না দেয়
+    },
+    referredBy: {
+      type: String,
+      default: null,
+    },
+    walletBalance: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
     isAdmin: {
       type: Boolean,
       required: true,
@@ -27,12 +46,12 @@ const userSchema = mongoose.Schema(
   }
 );
 
-// Match user entered password to hashed password in database
+// ইউজার পাসওয়ার্ড ম্যাচ করার ফাংশন
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Encrypt password using bcrypt
+// পাসওয়ার্ড হ্যাশ করার ফাংশন (সেভ করার আগে)
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     next();
