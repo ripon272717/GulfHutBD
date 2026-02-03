@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Form, Button, Row, Col, Card } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
-import { FaTimes, FaCopy, FaWallet, FaCamera, FaUsers, FaShareAlt, FaPaperPlane, FaUserCheck } from 'react-icons/fa';
+import { FaTimes, FaWallet, FaCamera, FaUsers, FaShareAlt, FaPaperPlane, FaUserCheck } from 'react-icons/fa';
 import axios from 'axios';
 
 import { toast } from 'react-toastify';
