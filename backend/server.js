@@ -17,6 +17,7 @@ const port = process.env.PORT || 5000;
 connectDB();
 
 const app = express();
+app.set('trust proxy', 1); // এটি যোগ করো
 
 // CORS কনফিগারেশন - এটি Vercel থেকে রিকোয়েস্ট আসার অনুমতি দিবে
 app.use(cors({

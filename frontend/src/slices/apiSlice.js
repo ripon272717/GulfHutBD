@@ -1,20 +1,25 @@
 import { fetchBaseQuery, createApi } from '@reduxjs/toolkit/query/react';
 import { BASE_URL } from '../constants';
+import { logout } from './authSlice';
 
-import { logout } from './authSlice'; // Import the logout action
-
-// NOTE: code here has changed to handle when our JWT and Cookie expire.
-// We need to customize the baseQuery to be able to intercept any 401 responses
-// and log the user out
-// https://redux-toolkit.js.org/rtk-query/usage/customizing-queries#customizing-queries-with-basequery
-
+// কাস্টম বেস কুয়েরি যেখানে credentials যোগ করা হয়েছে
 const baseQuery = fetchBaseQuery({
   baseUrl: BASE_URL,
+  // এটি খুবই জরুরি: এটি ব্রাউজারকে বলে যেন রিকোয়েস্টের সাথে কুকি পাঠায়
+  prepareHeaders: (headers) => {
+    headers.set('credentials', 'include');
+    return headers;
+  },
+  // আলাদা ডোমেইনের ক্ষেত্রে এটি অনেক সময় সরাসরি fetch অপশনেও দিতে হয়
+  fetchFn: (input, init) => {
+    return fetch(input, { ...init, credentials: 'include' });
+  },
 });
 
 async function baseQueryWithAuth(args, api, extra) {
   const result = await baseQuery(args, api, extra);
-  // Dispatch the logout action on 401.
+  
+  // যদি ব্যাকএন্ড থেকে 401 (Unauthorized) আসে, তবে ইউজারকে লগআউট করে দাও
   if (result.error && result.error.status === 401) {
     api.dispatch(logout());
   }
@@ -22,7 +27,7 @@ async function baseQueryWithAuth(args, api, extra) {
 }
 
 export const apiSlice = createApi({
-  baseQuery: baseQueryWithAuth, // Use the customized baseQuery
+  baseQuery: baseQueryWithAuth,
   tagTypes: ['Product', 'Order', 'User'],
   endpoints: (builder) => ({}),
 });
