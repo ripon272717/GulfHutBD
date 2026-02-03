@@ -36,7 +36,48 @@ const Header = () => {
             <img src={logo} alt='ProShop' />
             ProShop
           </Navbar.Brand>
-          <Navbar.Toggle aria-controls='basic-navbar-nav' />
+
+          {/* মোবাইল ভিউতে টগলারের বাম পাশে ইউজার ইনফো */}
+          <div className='d-flex align-items-center order-lg-last'>
+            {userInfo ? (
+              <div className='d-flex align-items-center me-2'>
+                {/* প্রোফাইল লোগো (ছবি না থাকলে নামের প্রথম অক্ষর) */}
+                <Link to='/profile' className='me-2'>
+                  {userInfo.image ? (
+                    <img
+                      src={userInfo.image}
+                      alt='user'
+                      style={{
+                        width: '35px',
+                        height: '35px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: '2px solid #FFD700',
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className='rounded-circle bg-warning d-flex align-items-center justify-content-center text-dark fw-bold'
+                      style={{ width: '35px', height: '35px', fontSize: '16px' }}
+                    >
+                      {userInfo.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </Link>
+
+                {/* নাম এবং ব্যালেন্স */}
+                <div className='text-start text-white me-2' style={{ lineHeight: '1.2' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{userInfo.name.split(' ')[0]}</div>
+                  <div style={{ fontSize: '11px', color: '#ffc107' }}>
+                    <FaWallet size={9} /> ৳{userInfo.walletBalance || 0}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            <Navbar.Toggle aria-controls='basic-navbar-nav' />
+          </div>
+
           <Navbar.Collapse id='basic-navbar-nav'>
             <Nav className='ms-auto align-items-center'>
               <SearchBox />
@@ -50,46 +91,15 @@ const Header = () => {
               </Nav.Link>
 
               {userInfo ? (
-                <div className='d-flex align-items-center'>
-                  {/* ব্যালেন্স এবং নামের ড্রপডাউন */}
-                  <div className='text-end me-2' style={{ lineHeight: '1.2' }}>
-                    <small className='d-block text-warning fw-bold' style={{ fontSize: '0.7rem' }}>
-                      <FaWallet size={10} className='me-1' />
-                      ${userInfo.walletBalance || 0}
-                    </small>
-                    <NavDropdown 
-                      title={userInfo.name} 
-                      id='username' 
-                      align='end'
-                      style={{ fontSize: '0.9rem', display: 'inline-block' }}
-                    >
-                      <NavDropdown.Item as={Link} to='/profile'>
-                        Edit Profile
-                      </NavDropdown.Item>
-                      <NavDropdown.Divider />
-                      <NavDropdown.Item onClick={logoutHandler}>
-                        Logout
-                      </NavDropdown.Item>
-                    </NavDropdown>
-                  </div>
-
-                  {/* প্রোফাইল ইমেজ - ক্লিক করলে প্রোফাইল পেজে যাবে */}
-                  <Link to='/profile'>
-                    <img
-                      src={userInfo.image || '/images/default-profile.png'}
-                      alt='user'
-                      style={{
-                        width: '30px',
-                        height: '30px',
-                        borderRadius: '50%',
-                        objectFit: 'cover',
-                        border: '2px solid #FFD700',
-                        cursor: 'pointer',
-                      }}
-                      title='Go to Profile'
-                    />
-                  </Link>
-                </div>
+                <NavDropdown title='Menu' id='username' align='end'>
+                  <NavDropdown.Item as={Link} to='/profile'>
+                    Edit Profile
+                  </NavDropdown.Item>
+                  <NavDropdown.Divider />
+                  <NavDropdown.Item onClick={logoutHandler}>
+                    Logout
+                  </NavDropdown.Item>
+                </NavDropdown>
               ) : (
                 <div className='d-flex align-items-center'>
                   <Nav.Link as={Link} to='/login'>
@@ -103,18 +113,11 @@ const Header = () => {
                 </div>
               )}
 
-              {/* Admin Links */}
               {userInfo && userInfo.isAdmin && (
                 <NavDropdown title='Admin' id='adminmenu' className='ms-2'>
-                  <NavDropdown.Item as={Link} to='/admin/productlist'>
-                    Products
-                  </NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to='/admin/orderlist'>
-                    Orders
-                  </NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to='/admin/userlist'>
-                    Users
-                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to='/admin/productlist'>Products</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to='/admin/orderlist'>Orders</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to='/admin/userlist'>Users</NavDropdown.Item>
                 </NavDropdown>
               )}
             </Nav>
