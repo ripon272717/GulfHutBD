@@ -11,9 +11,7 @@ const ProfileScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  
-  // এডিট মোড কন্ট্রোল করার জন্য
-  const [showEditForm, setShowEditForm] = useState(false);
+  const [editMode, setEditMode] = useState(false); // এডিট ফর্ম লুকানোর জন্য
 
   const { userInfo } = useSelector((state) => state.auth);
   const [updateProfile, { isLoading: loadingUpdateProfile }] = useProfileMutation();
@@ -34,7 +32,7 @@ const ProfileScreen = () => {
         const res = await updateProfile({ name, email, password }).unwrap();
         dispatch(setCredentials({ ...res }));
         toast.success('Profile updated successfully');
-        setShowEditForm(false);
+        setEditMode(false);
       } catch (err) {
         toast.error(err?.data?.message || err.error);
       }
@@ -42,93 +40,75 @@ const ProfileScreen = () => {
   };
 
   return (
-    <div className="profile-page">
-      <Row>
-        {/* বাম দিকের সেকশন: ব্যালেন্স এবং রেফারেল (সবসময় থাকবে) */}
-        <Col md={4} className="mb-4">
-          <Card className="shadow-sm">
-            <Card.Header className="bg-primary text-white text-center">
-              <h4>Dashboard</h4>
-            </Card.Header>
-            <ListGroup variant="flush">
-              <ListGroup.Item className="d-flex justify-content-between align-items-center">
-                <strong>Balance:</strong>
-                <span className="text-success fw-bold">৳ 500.00</span>
-              </ListGroup.Item>
-              <ListGroup.Item>
-                <strong>Referral Link:</strong>
-                <div className="d-flex mt-2">
-                  <Form.Control 
-                    readOnly 
-                    value={`https://gulfhut.com/ref/${userInfo._id}`} 
-                    size="sm" 
-                  />
-                  <Button variant="outline-secondary" size="sm" className="ms-1">Copy</Button>
-                </div>
-              </ListGroup.Item>
-              <ListGroup.Item>
-                <Button variant="warning" className="w-100 mb-2">Withdraw Money</Button>
-                <Button variant="info" className="w-100 text-white">Referral List</Button>
-              </ListGroup.Item>
-            </ListGroup>
-          </Card>
-        </Col>
+    <Row>
+      <Col md={4} className="mb-4">
+        <h2>User Profile</h2>
+        <Card className="shadow-sm">
+          <ListGroup variant="flush">
+            <ListGroup.Item className="d-flex justify-content-between align-items-center">
+              <strong>Balance:</strong>
+              <span className="text-success fw-bold">৳ {userInfo.balance || 0}</span>
+            </ListGroup.Item>
+            
+            {/* ইনভাইট ও শেয়ার বাটন */}
+            <ListGroup.Item>
+              <Button variant="primary" className="w-100 mb-2">Invite Friends</Button>
+              <Button variant="outline-primary" className="w-100">Share Link</Button>
+            </ListGroup.Item>
 
-        {/* ডান দিকের সেকশন: পার্সোনাল ইনফো এবং এডিট বাটন */}
-        <Col md={8}>
-          <Card className="shadow-sm p-4">
-            {!showEditForm ? (
-              <div className="personal-info">
-                <h3>Account Information</h3>
-                <hr />
-                <p><strong>Name:</strong> {userInfo.name}</p>
-                <p><strong>Email:</strong> {userInfo.email}</p>
-                {/* মোবাইল নম্বর তোমার ডাটাবেসে থাকলে এখানে দেখাবে */}
-                <p><strong>Mobile:</strong> 017XXXXXXXX</p> 
-                
+            {/* প্রোফাইল তথ্য (এখানে শুধু দেখা যাবে) */}
+            {!editMode ? (
+              <ListGroup.Item>
+                <p className="mb-1"><strong>Name:</strong> {userInfo.name}</p>
+                <p className="mb-1"><strong>Email:</strong> {userInfo.email}</p>
                 <Button 
-                  variant="primary" 
-                  onClick={() => setShowEditForm(true)}
-                  className="mt-3"
+                  variant="info" 
+                  size="sm" 
+                  className="w-100 mt-2 text-white"
+                  onClick={() => setEditMode(true)}
                 >
-                  Edit Profile / Update Password
+                  Edit Profile / Password
                 </Button>
-              </div>
+              </ListGroup.Item>
             ) : (
-              <Form onSubmit={submitHandler}>
-                <h3>Update Profile</h3>
-                <hr />
-                <Form.Group className='my-2' controlId='name'>
-                  <Form.Label>Name</Form.Label>
-                  <Form.Control type='text' value={name} onChange={(e) => setName(e.target.value)} />
-                </Form.Group>
+              /* এডিট ফর্ম (বাটনে ক্লিক করলে আসবে) */
+              <ListGroup.Item>
+                <Form onSubmit={submitHandler}>
+                  <Form.Group className='my-2' controlId='name'>
+                    <Form.Label>Name</Form.Label>
+                    <Form.Control type='text' value={name} onChange={(e) => setName(e.target.value)} />
+                  </Form.Group>
 
-                <Form.Group className='my-2' controlId='email'>
-                  <Form.Label>Email Address</Form.Label>
-                  <Form.Control type='email' value={email} onChange={(e) => setEmail(e.target.value)} />
-                </Form.Group>
+                  <Form.Group className='my-2' controlId='email'>
+                    <Form.Label>Email Address</Form.Label>
+                    <Form.Control type='email' value={email} onChange={(e) => setEmail(e.target.value)} />
+                  </Form.Group>
 
-                <Form.Group className='my-2' controlId='password'>
-                  <Form.Label>New Password</Form.Label>
-                  <Form.Control type='password' placeholder='Enter new password' onChange={(e) => setPassword(e.target.value)} />
-                </Form.Group>
+                  <Form.Group className='my-2' controlId='password'>
+                    <Form.Label>New Password</Form.Label>
+                    <Form.Control type='password' placeholder='New password' onChange={(e) => setPassword(e.target.value)} />
+                  </Form.Group>
 
-                <Form.Group className='my-2' controlId='confirmPassword'>
-                  <Form.Label>Confirm New Password</Form.Label>
-                  <Form.Control type='password' placeholder='Confirm new password' onChange={(e) => setConfirmPassword(e.target.value)} />
-                </Form.Group>
+                  <Form.Group className='my-2' controlId='confirmPassword'>
+                    <Form.Label>Confirm Password</Form.Label>
+                    <Form.Control type='password' placeholder='Confirm password' onChange={(e) => setConfirmPassword(e.target.value)} />
+                  </Form.Group>
 
-                <div className="mt-3">
-                  <Button type='submit' variant='success' className="me-2">Update Now</Button>
-                  <Button variant='secondary' onClick={() => setShowEditForm(false)}>Cancel</Button>
-                </div>
-                {loadingUpdateProfile && <Loader />}
-              </Form>
+                  <Button type='submit' variant='success' className='btn-sm mt-2'>Update</Button>
+                  <Button variant='light' className='btn-sm mt-2 ms-2' onClick={() => setEditMode(false)}>Cancel</Button>
+                  {loadingUpdateProfile && <Loader />}
+                </Form>
+              </ListGroup.Item>
             )}
-          </Card>
-        </Col>
-      </Row>
-    </div>
+          </ListGroup>
+        </Card>
+      </Col>
+
+      <Col md={8}>
+        <h2>My Orders</h2>
+        {/* এখানে তোমার অর্ডারের টেবিল থাকবে */}
+      </Col>
+    </Row>
   );
 };
 
