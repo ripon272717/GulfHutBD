@@ -2,7 +2,6 @@ import path from 'path';
 import express from 'express';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
-import cors from 'cors'; 
 dotenv.config();
 import connectDB from './config/db.js';
 import productRoutes from './routes/productRoutes.js';
@@ -18,32 +17,12 @@ connectDB();
 
 const app = express();
 
-// --- ১. CORS কনফিগারেশন (লোকালহোস্ট ও লাইভ সাইটের জন্য) ---
-const allowedOrigins = [
-  'https://gulf-hut-bd.vercel.app',
-  'http://localhost:3000',
-  'http://127.0.0.1:3000'
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-}));
-
-// --- ২. বডি পার্সার লিমিট (Image Too Large সমস্যা সমাধানের জন্য) ---
-// এখানে ১০ মেগাবাইট লিমিট দেওয়া হয়েছে যাতে বড় ছবি আপলোড করা যায়
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
+// বডি পার্সার (ইমেজ সাইজ লিমিট বাড়ানো হয়েছে যাতে এরর না আসে)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
-// --- ৩. এপিআই রুটসমূহ ---
+// এপিআই রুটস
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
@@ -54,14 +33,15 @@ app.get('/api/config/paypal', (req, res) =>
   res.send({ clientId: process.env.PAYPAL_CLIENT_ID })
 );
 
-// --- ৪. স্ট্যাটিক ফোল্ডার সেটআপ ---
 const __dirname = path.resolve();
 app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
 
-// প্রোডাকশন বনাম ডেভেলপমেন্ট মোড সেটআপ
+// প্রোডাকশন বনাম ডেভেলপমেন্ট সেটআপ
 if (process.env.NODE_ENV === 'production') {
+  // ফ্রন্টএন্ড বিল্ড ফোল্ডারকে স্ট্যাটিক হিসেবে সেট করা
   app.use(express.static(path.join(__dirname, '/frontend/build')));
 
+  // যেকোনো রুটে হিট করলে index.html পাঠানো (রিঅ্যাক্ট রাউটিং ঠিক রাখার জন্য)
   app.get('*', (req, res) =>
     res.sendFile(path.resolve(__dirname, 'frontend', 'build', 'index.html'))
   );
@@ -71,7 +51,7 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// --- ৫. এরর হ্যান্ডলিং মিডলওয়্যার ---
+// এরর হ্যান্ডলিং মিডলওয়্যার
 app.use(notFound);
 app.use(errorHandler);
 
