@@ -30,12 +30,20 @@ function fileFilter(req, file, cb) {
   }
 }
 
-const upload = multer({ storage, fileFilter });
+// এখানে লিমিট বাড়িয়ে দাও
+const upload = multer({ 
+  storage, 
+  fileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 } // ১০ মেগাবাইট পর্যন্ত অনুমতি দিলাম
+});
+
 const uploadSingleImage = upload.single('image');
 
 router.post('/', (req, res) => {
   uploadSingleImage(req, res, function (err) {
-    if (err) {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).send({ message: `Multer Error: ${err.message}` });
+    } else if (err) {
       return res.status(400).send({ message: err.message });
     }
 

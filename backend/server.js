@@ -17,52 +17,59 @@ const port = process.env.PORT || 5000;
 connectDB();
 
 const app = express();
-app.set('trust proxy', 1); // এটি যোগ করো
 
-// CORS কনফিগারেশন - এটি Vercel থেকে রিকোয়েস্ট আসার অনুমতি দিবে
+// --- CORS সমস্যার স্থায়ী সমাধান ---
 app.use(cors({
-  origin: 'https://gulf-hut-bd.vercel.app',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true, // এটি কুকি পাঠানোর জন্য মাস্ট
+  origin: function (origin, callback) {
+    // যদি রিকোয়েস্ট লোকালহোস্ট বা তোমার নির্দিষ্ট সাইট থেকে আসে তবে অনুমতি দাও
+    const allowedOrigins = [
+      'https://gulf-hut-bd.vercel.app',
+      'http://localhost:3000',
+      'http://127.0.0.1:3000'
+    ];
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
 }));
+// --------------------------------
 
-// এটি কুকি সেটিংসের জন্য রেন্ডারকে বিশ্বাস করতে সাহায্য করবে
-app.set('trust proxy', 1);
-
-// মিডলওয়্যার
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// বডি পার্সার (ইমেজ আপলোডের সুবিধার্থে লিমিট বাড়িয়ে দেওয়া হয়েছে)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
-// এপিআই রুটস
+// এপিআই রুটসমূহ
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/upload', uploadRoutes);
 
+// পেপাল কনফিগ
 app.get('/api/config/paypal', (req, res) =>
   res.send({ clientId: process.env.PAYPAL_CLIENT_ID })
 );
 
 const __dirname = path.resolve();
+app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
 
-// প্রোডাকশন এবং স্ট্যাটিক ফাইল সেটিংস
+// প্রোডাকশন বনাম ডেভেলপমেন্ট সেটআপ
 if (process.env.NODE_ENV === 'production') {
-  // রেন্ডারে আপলোড করা ফাইলগুলো দেখানোর জন্য
-  app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
-  
-  app.get('/', (req, res) => {
-    res.send('GulfHutBD API is running in production mode...');
-  });
+  app.use(express.static(path.join(__dirname, '/frontend/build')));
+
+  app.get('*', (req, res) =>
+    res.sendFile(path.resolve(__dirname, 'frontend', 'build', 'index.html'))
+  );
 } else {
-  app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
-  
   app.get('/', (req, res) => {
     res.send('API is running....');
   });
 }
 
-// এরর হ্যান্ডলিং মিডলওয়্যার
+// এরর হ্যান্ডলিং
 app.use(notFound);
 app.use(errorHandler);
 
