@@ -3,7 +3,9 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import cors from 'cors'; 
+
 dotenv.config();
+
 import connectDB from './config/db.js';
 import productRoutes from './routes/productRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -17,20 +19,11 @@ connectDB();
 
 const app = express();
 
-// লোকাল এবং অনলাইন উভয় ডোমেইনকে অনুমতি দেওয়া
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://gulf-hut-bd.vercel.app'
-];
-
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: [
+    'http://localhost:3000',
+    'https://gulf-hut-bd.vercel.app'
+  ],
   credentials: true,
 }));
 
@@ -65,5 +58,5 @@ app.use(notFound);
 app.use(errorHandler);
 
 app.listen(port, () =>
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${port}`)
+  console.log(`Server running on port ${port}`)
 );
