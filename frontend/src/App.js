@@ -23,11 +23,12 @@ const App = () => {
     }
   }, [dispatch]);
 
-  return (
+ return (
     <>
       <ToastContainer />
       <Header />
-      <main className='py-3'>
+      {/* এখানে style={{ marginTop: '80px' }} যোগ করা হয়েছে */}
+      <main className='py-3' style={{ marginTop: '70px', minHeight: '80vh' }}>
         <Container>
           <Outlet />
         </Container>
