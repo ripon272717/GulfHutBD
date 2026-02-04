@@ -5,11 +5,12 @@ const generateToken = (res, userId) => {
     expiresIn: '30d',
   });
 
-  // কুকি সেটিংস যা Vercel এবং Render দুই জায়গাতেই কাজ করবে
+  const isDev = process.env.NODE_ENV !== 'production';
+
   res.cookie('jwt', token, {
     httpOnly: true,
-    secure: true, // ক্রস-সাইট কুকির জন্য এটি অবশ্যই true হতে হবে
-    sameSite: 'none', // এটি 'none' না দিলে Vercel-এ লগইন থাকবে না
+    secure: !isDev, // প্রোডাকশনে true, লোকালহোস্টে false
+    sameSite: isDev ? 'lax' : 'none', // লোকালহোস্টে lax, প্রোডাকশনে none
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 };
