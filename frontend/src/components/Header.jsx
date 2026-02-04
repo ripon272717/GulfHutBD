@@ -30,7 +30,7 @@ const Header = () => {
 
   return (
     <header>
-      <Navbar bg='primary' variant='dark' expand='lg' collapseOnSelect>
+      <Navbar bg='primary' variant='dark' expand='lg' fixed='top' collapseOnSelect>
         <Container>
           <Navbar.Brand as={Link} to='/'>
             <img src={logo} alt='Qatari Hut BD' 
