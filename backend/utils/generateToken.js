@@ -9,8 +9,8 @@ const generateToken = (res, userId) => {
 
   res.cookie('jwt', token, {
     httpOnly: true,
-    secure: !isDev, // প্রোডাকশনে true, লোকালহোস্টে false
-    sameSite: isDev ? 'lax' : 'none', // লোকালহোস্টে lax, প্রোডাকশনে none
+    secure: !isDev, // প্রোডাকশনে (HTTPS) true হবে
+    sameSite: isDev ? 'lax' : 'strict', 
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 };
