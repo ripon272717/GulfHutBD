@@ -5,7 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useLogoutMutation } from '../slices/usersApiSlice';
 import { logout } from '../slices/authSlice';
 import SearchBox from './SearchBox';
-import logo from '../assets/logo.png';
+import logo from '../assets/Ourlogo.png';
 import { resetCart } from '../slices/cartSlice';
 
 const Header = () => {
@@ -33,8 +33,15 @@ const Header = () => {
       <Navbar bg='primary' variant='dark' expand='lg' collapseOnSelect>
         <Container>
           <Navbar.Brand as={Link} to='/'>
-            <img src={logo} alt='ProShop' />
-            ProShop
+            <img src={logo} alt='Qatari Hut BD' 
+            style={{ 
+    height: '50px', 
+    width: 'auto',   
+    marginRight: '10px',
+    borderRadius: '10px' // এই লাইনটি যোগ করুন
+         }}
+            />
+            QHut BD
           </Navbar.Brand>
 
           {/* মোবাইল ভিউতে টগলারের বাম পাশে ইউজার ইনফো */}
@@ -48,8 +55,8 @@ const Header = () => {
                       src={userInfo.image}
                       alt='user'
                       style={{
-                        width: '35px',
-                        height: '35px',
+                        width: '45px',
+                        height: '45px',
                         borderRadius: '50%',
                         objectFit: 'cover',
                         border: '2px solid #FFD700',
