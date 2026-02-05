@@ -38,20 +38,29 @@ const Header = () => {
     } catch (err) { console.error(err); }
   };
 
-  // হোম পেজে যাওয়ার ফাংশন
   const goHome = () => navigate('/');
-
-  // প্রোফাইল এডিট পেজে যাওয়ার ফাংশন (ইমেজ বা আইকনে ক্লিক করলে কাজ করবে)
-  const goToProfile = () => {
-    navigate('/profile');
-    console.log('Navigating to Profile Edit...');
-  };
+  const goToProfile = () => navigate('/profile');
 
   return (
     <header>
       <style>
         {`
           .nav-link::after, .dropdown-toggle::after { display: none !important; }
+          
+          /* PC (Large Screens) */
+          .nav-text { font-size: 18px !important; font-weight: bold; }
+          .header-icon { font-size: 24px; }
+          .brand-text { font-size: 22px !important; }
+
+          /* Mobile (Small Screens) Customization */
+          @media (max-width: 768px) {
+            .nav-text { font-size: 15px !important; }
+            .header-icon { font-size: 20px; }
+            .brand-text { font-size: 18px !important; }
+            .user-balance { font-size: 10px !important; }
+            .profile-img { width: 28px !important; height: 28px !important; }
+          }
+
           .search-box {
             background: #343a40 !important; border: 1px solid #495057 !important;
             color: white !important; border-radius: 25px 0 0 25px !important;
@@ -60,70 +69,74 @@ const Header = () => {
             border-radius: 0 25px 25px 0 !important; background: #ffc107 !important;
             border: none !important; color: #000 !important;
           }
-          .mobile-search-area { background: #212529; padding: 10px; }
         `}
       </style>
 
       <Navbar bg='dark' variant='dark' fixed='top' className='py-2 shadow-sm flex-column'>
-        <Container className='d-flex align-items-center justify-content-between w-100'>
+        <Container className='d-flex align-items-center justify-content-between w-100 px-2'>
           
-          {/* ১. লোগো ও হোমে যাওয়ার ফাঁকা জায়গা */}
+          {/* ১. লোগো */}
           <div onClick={goHome} className='d-flex align-items-center m-0' style={{ cursor: 'pointer' }}>
             <img src={logo} alt='GulfHut' style={{ width: '32px', height: '32px' }} />
-            <span className='fw-bold d-none d-md-inline ms-2 text-white' style={{fontSize: '18px'}}>GulfHut</span>
+            <span className='fw-bold d-none d-sm-inline ms-1 text-white brand-text'>GulfHut</span>
           </div>
 
           {/* ২. ক্যাটাগরি */}
-          <Nav className='ms-2'>
-            <NavDropdown title={<span className='text-white fw-bold'>Category <FaChevronDown size={10} /></span>} id='category-dropdown'>
+          <Nav className='ms-1'>
+            <NavDropdown title={
+              <span className='text-white nav-text d-flex align-items-center'>
+                Category <FaChevronDown size={11} className='ms-1' />
+              </span>
+            } id='category-dropdown'>
               <LinkContainer to='/category/bra'><NavDropdown.Item>1) Bra</NavDropdown.Item></LinkContainer>
               <LinkContainer to='/category/cream'><NavDropdown.Item>3) Cream</NavDropdown.Item></LinkContainer>
             </NavDropdown>
           </Nav>
 
           {/* ৩. পিসি সার্চবার */}
-          <Form onSubmit={submitHandler} className='d-none d-lg-flex flex-grow-1 mx-4' style={{ maxWidth: '400px' }}>
+          <Form onSubmit={submitHandler} className='d-none d-lg-flex flex-grow-1 mx-3' style={{ maxWidth: '400px' }}>
             <InputGroup>
-              <Form.Control type='text' value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder='কি খুঁজছেন?' className='search-box' />
+              <Form.Control type='text' value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder='Search...' className='search-box' />
               <InputGroup.Text as="button" type="submit" className="search-btn"><FaSearch /></InputGroup.Text>
             </InputGroup>
           </Form>
 
-          {/* ৪. ডান পাশের সেকশন */}
+          {/* ৪. রাইট সাইড আইকন */}
           <Nav className='d-flex align-items-center flex-row'>
-            <Nav.Link className='d-lg-none me-2 p-0' onClick={() => setShowSearch(!showSearch)}>
-              {showSearch ? <FaTimes size={20} className='text-warning' /> : <FaSearch size={20} />}
-            </Nav.Link>
+            {/* মোবাইল সার্চ আইকন */}
+            <div className='d-lg-none me-2 text-white' onClick={() => setShowSearch(!showSearch)} style={{ cursor: 'pointer' }}>
+              {showSearch ? <FaTimes className='header-icon text-warning' /> : <FaSearch className='header-icon' />}
+            </div>
 
+            {/* কার্ট */}
             <LinkContainer to='/cart'>
-              <Nav.Link className='me-3 position-relative p-0'>
-                <FaShoppingCart size={22} />
+              <Nav.Link className='me-2 position-relative p-0 text-white'>
+                <FaShoppingCart className='header-icon' />
                 {cartItems.length > 0 && <Badge pill bg='success' style={{ position: 'absolute', top: '-8px', right: '-8px', fontSize: '10px' }}>{cartItems.reduce((a, c) => a + c.qty, 0)}</Badge>}
               </Nav.Link>
             </LinkContainer>
 
             {userInfo ? (
               <div className='d-flex align-items-center'>
-                {/* ব্যালেন্স */}
-                <div className='me-2 text-warning fw-bold d-none d-sm-block' style={{ fontSize: '12px' }}>
-                  QR {userInfo.balance}
+                <div className='d-flex flex-column align-items-end me-1' style={{ lineHeight: '1.1' }}>
+                  <span className='text-warning fw-bold user-balance'>QR {userInfo.balance}</span>
+                  <span className='text-white d-none d-md-block' style={{ fontSize: '14px' }}>{userInfo.name.split(' ')[0]}</span>
                 </div>
 
-                {/* প্রোফাইল ইমেজ - ক্লিক করলে এডিটে যাবে */}
                 <div onClick={goToProfile} style={{ cursor: 'pointer' }} className='mx-1'>
                   <Image 
                     src={userInfo.image || '/images/profile.png'} 
                     roundedCircle 
-                    style={{ width: '32px', height: '32px', border: '1.5px solid #fff', objectFit: 'cover' }} 
+                    className='profile-img'
+                    style={{ width: '34px', height: '34px', border: '1.5px solid #fff', objectFit: 'cover' }} 
                   />
                 </div>
 
-                {/* মেনু ড্রপডাউন */}
                 <NavDropdown 
                   title={
-                    <span>
-                      <span className='d-none d-md-inline text-white ms-1'>Menu <FaChevronDown size={10} /></span>
-                      <FaBars size={18} className='d-md-none text-white' />
+                    <span className='d-flex align-items-center'>
+                      <span className='d-none d-md-inline text-white ms-1 nav-text'>Menu <FaChevronDown size={10} /></span>
+                      <FaBars className='header-icon text-white d-md-none' />
                     </span>
                   } 
                   align='end'
@@ -134,22 +147,21 @@ const Header = () => {
                 </NavDropdown>
               </div>
             ) : (
-              /* ইউজার লগইন না থাকলে এই আইকনে ক্লিক করলেও লগইন বা প্রোফাইল পেজে যাবে */
-              <div onClick={goToProfile} style={{ cursor: 'pointer' }} className='text-white p-0'>
-                <FaUser size={18} />
+              <div onClick={goToProfile} style={{ cursor: 'pointer' }} className='text-white p-0 ms-1'>
+                <FaUser className='header-icon' />
               </div>
             )}
           </Nav>
         </Container>
 
-        {/* ৫. মোবাইল সার্চ স্লাইডার */}
+        {/* মোবাইল সার্চ */}
         <Collapse in={showSearch}>
-          <div className='w-100 d-lg-none mobile-search-area'>
+          <div className='w-100 d-lg-none bg-dark p-2 border-top border-secondary'>
             <Container>
               <Form onSubmit={submitHandler}>
                 <InputGroup>
-                  <Form.Control type='text' value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder='এখানে লিখুন...' className='search-box' />
-                  <InputGroup.Text as="button" type="submit" className="search-btn"><FaSearch /></InputGroup.Text>
+                  <Form.Control type='text' value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder='Search here...' className='search-box py-2' />
+                  <InputGroup.Text as="button" type="submit" className="search-btn px-3"><FaSearch /></InputGroup.Text>
                 </InputGroup>
               </Form>
             </Container>
