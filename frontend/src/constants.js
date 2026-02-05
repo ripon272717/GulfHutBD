@@ -1,7 +1,5 @@
-export const BASE_URL = 
-  process.env.NODE_ENV === 'development' 
-    ? 'http://localhost:5000' 
-    : ''; // প্রোডাকশনে খালি থাকবে কারণ ফ্রন্টএন্ড-ব্যাকএন্ড এখন একই ডোমেইনে (Render) থাকবে
+// যদি এনভায়রনমেন্ট ডেভেলপমেন্ট হয় তবে লোকালহোস্ট, নাহলে রেন্ডারের লিঙ্ক
+export const BASE_URL = 'https://gulfhutbd.onrender.com'; 
 
 export const PRODUCTS_URL = '/api/products';
 export const USERS_URL = '/api/users';

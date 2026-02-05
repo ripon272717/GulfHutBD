@@ -20,7 +20,7 @@ async function baseQueryWithAuth(args, api, extra) {
 }
 
 export const apiSlice = createApi({
-  baseQuery: baseQueryWithAuth,
+  baseQuery: fetchBaseQuery({ baseUrl: BASE_URL }), // এখানে BASE_URL ইম্পোর্ট হয়েছে কি না দেখো
   tagTypes: ['Product', 'Order', 'User'],
   endpoints: (builder) => ({}),
 });
