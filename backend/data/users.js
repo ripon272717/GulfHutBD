@@ -28,6 +28,15 @@ const users = [
     isSuperAdmin: false,
     walletBalance: 100,
   },
+  {
+  name: 'Mohshin',
+  mobile: '01900000011',
+  email: 'myadmin2@example.com',
+  password: bcrypt.hashSync('123456', 10),
+  isAdmin: true, // এটি তাকে অ্যাডমিন বানাবে
+  isSuperAdmin: false,
+  walletBalance: 0,
+}
 ];
 
 export default users;
