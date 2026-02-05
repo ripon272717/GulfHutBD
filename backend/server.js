@@ -20,8 +20,10 @@ const app = express();
 
 // CORS কনফিগারেশন (লোকালহোস্টের জন্য)
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://gulf-hut-bd.vercel.app/'], // এখানে তোমার ভার্সেল ডোমেইন দাও
-  credentials: true
+  origin: 'https://gulf-hut-bd.vercel.app', // তোমার ভার্সেল ডোমেইন
+  credentials: true, // কুকি বা অথেন্টিকেশন পাঠানোর জন্য এটি জরুরি
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json({ limit: '50mb' }));
