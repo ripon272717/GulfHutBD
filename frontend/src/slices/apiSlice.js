@@ -2,25 +2,26 @@ import { fetchBaseQuery, createApi } from '@reduxjs/toolkit/query/react';
 import { BASE_URL } from '../constants';
 import { logout } from './authSlice';
 
-// fetchBaseQuery কনফিগারেশন
+// ১. বেস কুয়েরি তৈরি
 const baseQuery = fetchBaseQuery({
   baseUrl: BASE_URL,
-  // এটিই সবচেয়ে গুরুত্বপূর্ণ লাইন যা ভার্সেল থেকে রেন্ডারে কুকি পাঠাতে বাধ্য করবে
   credentials: 'include', 
 });
 
-async function baseQueryWithAuth(args, api, extra) {
+// ২. অথেনটিকেশন চেক করার জন্য কাস্টম কুয়েরি
+const baseQueryWithAuth = async (args, api, extra) => {
   const result = await baseQuery(args, api, extra);
 
-  // যদি ব্যাকএন্ড থেকে 401 Unauthorized এরর আসে, তার মানে ইউজার লগইন নেই
+  // যদি ৪০১ এরর আসে (লগইন নেই বা টোকেন নেই)
   if (result.error && result.error.status === 401) {
     api.dispatch(logout());
   }
   return result;
-}
+};
 
+// ৩. এপিআই স্লাইস - এখানে আমরা baseQueryWithAuth ব্যবহার করছি
 export const apiSlice = createApi({
-  baseQuery: fetchBaseQuery({ baseUrl: BASE_URL }), // এখানে BASE_URL ইম্পোর্ট হয়েছে কি না দেখো
+  baseQuery: baseQueryWithAuth, // এই লাইনটিই ওয়ার্নিং রিমুভ করবে কারণ এখন এটা ব্যবহৃত হচ্ছে
   tagTypes: ['Product', 'Order', 'User'],
   endpoints: (builder) => ({}),
 });
