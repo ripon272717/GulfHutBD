@@ -47,18 +47,18 @@ const Header = () => {
         {`
           .nav-link::after, .dropdown-toggle::after { display: none !important; }
           
-          /* PC (Large Screens) */
+          /* PC Styles */
           .nav-text { font-size: 18px !important; font-weight: bold; }
           .header-icon { font-size: 24px; }
           .brand-text { font-size: 22px !important; }
 
-          /* Mobile (Small Screens) Customization */
-          @media (max-width: 768px) {
-            .nav-text { font-size: 15px !important; }
-            .header-icon { font-size: 20px; }
-            .brand-text { font-size: 18px !important; }
-            .user-balance { font-size: 10px !important; }
-            .profile-img { width: 28px !important; height: 28px !important; }
+          /* Mobile Styles */
+          @media (max-width: 576px) {
+            .nav-text { font-size: 16px !important; }
+            .header-icon { font-size: 22px; }
+            .user-info-text { font-size: 11px !important; font-weight: bold; }
+            /* প্রোফাইল ইমেজ মোবাইলে বড় */
+            .profile-img-mobile { width: 42px !important; height: 42px !important; border: 1.5px solid #fff !important; }
           }
 
           .search-box {
@@ -75,42 +75,45 @@ const Header = () => {
       <Navbar bg='dark' variant='dark' fixed='top' className='py-2 shadow-sm flex-column'>
         <Container className='d-flex align-items-center justify-content-between w-100 px-2'>
           
-          {/* ১. লোগো */}
-          <div onClick={goHome} className='d-flex align-items-center m-0' style={{ cursor: 'pointer' }}>
-            <img src={logo} alt='GulfHut' style={{ width: '32px', height: '32px' }} />
-            <span className='fw-bold d-none d-sm-inline ms-1 text-white brand-text'>GulfHut</span>
+          {/* লোগো ও ব্র্যান্ড নেম (পিসিতে লেখা দেখাবে, মোবাইলে শুধু লোগো) */}
+          <div className='d-flex align-items-center'>
+            <div onClick={goHome} className='d-flex align-items-center' style={{ cursor: 'pointer' }}>
+              <img src={logo} alt='GulfHut' style={{ width: '32px', height: '32px' }} />
+              {/* d-none d-md-inline মানে মোবাইলে হাইড, পিসিতে শো */}
+              <span className='fw-bold d-none d-md-inline ms-2 text-white brand-text'>GulfHut</span>
+            </div>
+            
+            {/* ক্যাটাগরি - লোগোর পাশেই */}
+            <Nav className='ms-1 ms-md-3'>
+              <NavDropdown title={
+                <span className='text-white nav-text d-flex align-items-center'>
+                  Category <FaChevronDown size={10} className='ms-1' />
+                </span>
+              } id='category-dropdown'>
+                <LinkContainer to='/category/bra'><NavDropdown.Item>1) Bra</NavDropdown.Item></LinkContainer>
+                <LinkContainer to='/category/cream'><NavDropdown.Item>3) Cream</NavDropdown.Item></LinkContainer>
+              </NavDropdown>
+            </Nav>
           </div>
 
-          {/* ২. ক্যাটাগরি */}
-          <Nav className='ms-1'>
-            <NavDropdown title={
-              <span className='text-white nav-text d-flex align-items-center'>
-                Category <FaChevronDown size={11} className='ms-1' />
-              </span>
-            } id='category-dropdown'>
-              <LinkContainer to='/category/bra'><NavDropdown.Item>1) Bra</NavDropdown.Item></LinkContainer>
-              <LinkContainer to='/category/cream'><NavDropdown.Item>3) Cream</NavDropdown.Item></LinkContainer>
-            </NavDropdown>
-          </Nav>
-
-          {/* ৩. পিসি সার্চবার */}
-          <Form onSubmit={submitHandler} className='d-none d-lg-flex flex-grow-1 mx-3' style={{ maxWidth: '400px' }}>
+          {/* পিসি সার্চবার (লার্জ স্ক্রিন) */}
+          <Form onSubmit={submitHandler} className='d-none d-lg-flex flex-grow-1 mx-4' style={{ maxWidth: '350px' }}>
             <InputGroup>
-              <Form.Control type='text' value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder='Search...' className='search-box' />
+              <Form.Control type='text' value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder='কি খুঁজছেন?' className='search-box' />
               <InputGroup.Text as="button" type="submit" className="search-btn"><FaSearch /></InputGroup.Text>
             </InputGroup>
           </Form>
 
-          {/* ৪. রাইট সাইড আইকন */}
+          {/* ডান পাশের আইকনসমূহ */}
           <Nav className='d-flex align-items-center flex-row'>
             {/* মোবাইল সার্চ আইকন */}
-            <div className='d-lg-none me-2 text-white' onClick={() => setShowSearch(!showSearch)} style={{ cursor: 'pointer' }}>
+            <div className='d-lg-none me-3 text-white' onClick={() => setShowSearch(!showSearch)} style={{ cursor: 'pointer' }}>
               {showSearch ? <FaTimes className='header-icon text-warning' /> : <FaSearch className='header-icon' />}
             </div>
 
-            {/* কার্ট */}
+            {/* কার্ট আইকন */}
             <LinkContainer to='/cart'>
-              <Nav.Link className='me-2 position-relative p-0 text-white'>
+              <Nav.Link className='me-3 position-relative p-0 text-white'>
                 <FaShoppingCart className='header-icon' />
                 {cartItems.length > 0 && <Badge pill bg='success' style={{ position: 'absolute', top: '-8px', right: '-8px', fontSize: '10px' }}>{cartItems.reduce((a, c) => a + c.qty, 0)}</Badge>}
               </Nav.Link>
@@ -118,20 +121,23 @@ const Header = () => {
 
             {userInfo ? (
               <div className='d-flex align-items-center'>
-                <div className='d-flex flex-column align-items-end me-1' style={{ lineHeight: '1.1' }}>
-                  <span className='text-warning fw-bold user-balance'>QR {userInfo.balance}</span>
-                  <span className='text-white d-none d-md-block' style={{ fontSize: '14px' }}>{userInfo.name.split(' ')[0]}</span>
+                {/* ব্যালেন্স এবং নাম - পিসি ও মোবাইল উভয় জায়গায় */}
+                <div className='d-flex flex-column align-items-end me-1' style={{ lineHeight: '1.2' }}>
+                  <span className='text-warning fw-bold user-info-text'>QR {userInfo.balance}</span>
+                  <span className='text-white user-info-text'>{userInfo.name.split(' ')[0]}</span>
                 </div>
 
+                {/* প্রোফাইল ইমেজ (মোবাইলে বড়) */}
                 <div onClick={goToProfile} style={{ cursor: 'pointer' }} className='mx-1'>
                   <Image 
                     src={userInfo.image || '/images/profile.png'} 
                     roundedCircle 
-                    className='profile-img'
-                    style={{ width: '34px', height: '34px', border: '1.5px solid #fff', objectFit: 'cover' }} 
+                    className='profile-img-mobile shadow-sm'
+                    style={{ width: '35px', height: '35px', border: '2px solid #fff', objectFit: 'cover' }} 
                   />
                 </div>
 
+                {/* মেনু আইকন */}
                 <NavDropdown 
                   title={
                     <span className='d-flex align-items-center'>
@@ -147,21 +153,21 @@ const Header = () => {
                 </NavDropdown>
               </div>
             ) : (
-              <div onClick={goToProfile} style={{ cursor: 'pointer' }} className='text-white p-0 ms-1'>
+              <div onClick={goToProfile} style={{ cursor: 'pointer' }} className='text-white p-0'>
                 <FaUser className='header-icon' />
               </div>
             )}
           </Nav>
         </Container>
 
-        {/* মোবাইল সার্চ */}
+        {/* মোবাইল সার্চ ড্রপডাউন */}
         <Collapse in={showSearch}>
           <div className='w-100 d-lg-none bg-dark p-2 border-top border-secondary'>
             <Container>
               <Form onSubmit={submitHandler}>
                 <InputGroup>
-                  <Form.Control type='text' value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder='Search here...' className='search-box py-2' />
-                  <InputGroup.Text as="button" type="submit" className="search-btn px-3"><FaSearch /></InputGroup.Text>
+                  <Form.Control type='text' value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder='Search product...' className='search-box py-2' />
+                  <InputGroup.Text as="button" type="submit" className="search-btn px-3"><FaSearch size={18} /></InputGroup.Text>
                 </InputGroup>
               </Form>
             </Container>
