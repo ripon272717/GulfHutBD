@@ -7,17 +7,17 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    // মোবাইল নম্বর এখন প্রধান আইডি হিসেবে কাজ করবে
+    // মোবাইল নম্বর প্রধান আইডি
     mobile: {
       type: String,
       required: true,
       unique: true,
     },
-    // ইমেইল ঐচ্ছিক করা হয়েছে
+    // ইমেইল ঐচ্ছিক
     email: {
       type: String,
       unique: true,
-      sparse: true, // এটি খালি ইমেইল থাকলেও ডুপ্লিকেট এরর দেবে না
+      sparse: true, 
     },
     password: {
       type: String,
@@ -45,18 +45,24 @@ const userSchema = mongoose.Schema(
       required: true,
       default: false,
     },
+    // নতুন সুপার অ্যাডমিন ফিল্ড (ওনারের জন্য)
+    isSuperAdmin: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// পাসওয়ার্ড ম্যাচ করার মেথড
+// পাসওয়ার্ড ম্যাচ করার মেথড
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// ডাটা সেভ করার আগে পাসওয়ার্ড হ্যাশ করার মিডলওয়্যার
+// ডাটা সেভ করার আগে পাসওয়ার্ড হ্যাশ করার মিডলওয়্যার
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     next();

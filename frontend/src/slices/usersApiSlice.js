@@ -57,6 +57,17 @@ export const userApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['User'],
     }),
+
+    // --- এখান থেকে নতুন ব্যালেন্স আপডেটের অংশ শুরু ---
+    updateUserBalance: builder.mutation({
+      query: (data) => ({
+        url: `${USERS_URL}/${data.userId}/balance`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['User'],
+    }),
+    // -------------------------------------------
   }),
 });
 
@@ -69,4 +80,5 @@ export const {
   useDeleteUserMutation,
   useUpdateUserMutation,
   useGetUserDetailsQuery,
+  useUpdateUserBalanceMutation, // এই লাইনটি যোগ করতে ভুলবে না
 } = userApiSlice;
