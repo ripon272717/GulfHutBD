@@ -64,6 +64,17 @@ const productSchema = mongoose.Schema(
       required: true,
       default: 0,
     },
+    // নতুন ফিল্ডগুলো নিচে কমা দিয়ে যোগ করা হলো
+    showOnHomepage: {
+      type: Boolean,
+      required: true,
+      default: true,
+    },
+    categoryOnly: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
   },
   {
     timestamps: true,

@@ -51,3 +51,45 @@ table th {
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
 }
+/* ড্রপডাউন মেনু মাউস নিলে যেন সহজে না যায় এবং সুন্দর পপআপ হয় */
+.dropdown:hover > .dropdown-menu {
+  display: block;
+  margin-top: 0;
+}
+/* সাব-মেনু ডানপাশে বা বামপাশে দেখানোর জন্য */
+.dropdown-menu .dropdown-toggle::after {
+  border-top: 0.3em solid transparent;
+  border-right: 0;
+  border-bottom: 0.3em solid transparent;
+  border-left: 0.3em solid;
+}
+
+.dropdown-menu .dropdown-menu {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.dropdown-item:hover > .dropdown-menu {
+  display: block;
+  position: absolute;
+  left: 100%; /* পিসিতে ডান পাশে দেখাবে */
+  top: 0;
+}
+
+@media (max-width: 991px) {
+  .dropdown-item:hover > .dropdown-menu {
+    position: static; /* মোবাইলে নিচে নিচে দেখাবে */
+  }
+}
+
+/* মোবাইল ভিউতে ২ কলামে প্রোডাক্ট সুন্দর দেখানোর জন্য কার্ডের ফন্ট একটু ছোট করা */
+@media (max-width: 576px) {
+  .product-title {
+    font-size: 0.8rem;
+    height: 35px;
+    overflow: hidden;
+  }
+  .card-body {
+    padding: 10px;
+  }
+}
