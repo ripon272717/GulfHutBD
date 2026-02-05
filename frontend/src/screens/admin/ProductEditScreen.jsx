@@ -22,6 +22,9 @@ const ProductEditScreen = () => {
   const [countInStock, setCountInStock] = useState(0);
   const [description, setDescription] = useState('');
 
+  // --- তোমার ক্যাটাগরি লিস্ট এখানে সেট করো ---
+  const categories = ['Electronics', 'Grocery', 'Mobile', 'Fashion', 'Health'];
+
   const {
     data: product,
     isLoading,
@@ -49,7 +52,7 @@ const ProductEditScreen = () => {
         category,
         description,
         countInStock,
-      }).unwrap(); // NOTE: here we need to unwrap the Promise to catch any rejection in our catch block
+      }).unwrap();
       toast.success('Product updated');
       refetch();
       navigate('/admin/productlist');
@@ -96,7 +99,7 @@ const ProductEditScreen = () => {
           <Message variant='danger'>{error.data.message}</Message>
         ) : (
           <Form onSubmit={submitHandler}>
-            <Form.Group controlId='name'>
+            <Form.Group controlId='name' className='my-2'>
               <Form.Label>Name</Form.Label>
               <Form.Control
                 type='name'
@@ -106,7 +109,7 @@ const ProductEditScreen = () => {
               ></Form.Control>
             </Form.Group>
 
-            <Form.Group controlId='price'>
+            <Form.Group controlId='price' className='my-2'>
               <Form.Label>Price</Form.Label>
               <Form.Control
                 type='number'
@@ -116,7 +119,7 @@ const ProductEditScreen = () => {
               ></Form.Control>
             </Form.Group>
 
-            <Form.Group controlId='image'>
+            <Form.Group controlId='image' className='my-2'>
               <Form.Label>Image</Form.Label>
               <Form.Control
                 type='text'
@@ -128,11 +131,12 @@ const ProductEditScreen = () => {
                 label='Choose File'
                 onChange={uploadFileHandler}
                 type='file'
+                className='mt-2'
               ></Form.Control>
               {loadingUpload && <Loader />}
             </Form.Group>
 
-            <Form.Group controlId='brand'>
+            <Form.Group controlId='brand' className='my-2'>
               <Form.Label>Brand</Form.Label>
               <Form.Control
                 type='text'
@@ -142,7 +146,7 @@ const ProductEditScreen = () => {
               ></Form.Control>
             </Form.Group>
 
-            <Form.Group controlId='countInStock'>
+            <Form.Group controlId='countInStock' className='my-2'>
               <Form.Label>Count In Stock</Form.Label>
               <Form.Control
                 type='number'
@@ -152,20 +156,28 @@ const ProductEditScreen = () => {
               ></Form.Control>
             </Form.Group>
 
-            <Form.Group controlId='category'>
+            {/* --- আপডেট করা ক্যাটাগরি ড্রপডাউন --- */}
+            <Form.Group controlId='category' className='my-2'>
               <Form.Label>Category</Form.Label>
               <Form.Control
-                type='text'
-                placeholder='Enter category'
+                as='select'
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-              ></Form.Control>
+              >
+                <option value=''>Select Category</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </Form.Control>
             </Form.Group>
 
-            <Form.Group controlId='description'>
+            <Form.Group controlId='description' className='my-2'>
               <Form.Label>Description</Form.Label>
               <Form.Control
-                type='text'
+                as='textarea'
+                rows={3}
                 placeholder='Enter description'
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -176,8 +188,9 @@ const ProductEditScreen = () => {
               type='submit'
               variant='primary'
               style={{ marginTop: '1rem' }}
+              className='w-100'
             >
-              Update
+              Update Product
             </Button>
           </Form>
         )}

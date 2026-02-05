@@ -1,6 +1,5 @@
-import { useEffect } from 'react';
-import { useLocation, useParams, Link } from 'react-router-dom';
-import { Row, Col, Container } from 'react-bootstrap'; // Container যোগ করা হয়েছে
+import { Row, Col, Container } from 'react-bootstrap';
+import { useParams, Link } from 'react-router-dom';
 import { useGetProductsQuery } from '../slices/productsApiSlice';
 import Product from '../components/Product';
 import Loader from '../components/Loader';
@@ -11,19 +10,6 @@ import Meta from '../components/Meta';
 
 const HomeScreen = () => {
   const { pageNumber, keyword } = useParams();
-  
-  // --- রেফারেল লজিক শুরু ---
-  const { search } = useLocation();
-  const sp = new URLSearchParams(search);
-  const refCode = sp.get('ref');
-
-  useEffect(() => {
-    if (refCode) {
-      localStorage.setItem('referrerCode', refCode);
-      console.log('Referrer Code Saved:', refCode);
-    }
-  }, [refCode]);
-  // --- রেফারেল লজিক শেষ ---
 
   const { data, isLoading, error } = useGetProductsQuery({
     keyword,
@@ -32,44 +18,49 @@ const HomeScreen = () => {
 
   return (
     <>
-      {/* স্লাইডার কন্টেইনারের বাইরে যাতে এটি ফুল স্ক্রিন স্লাইড হয় */}
       {!keyword ? (
         <ProductCarousel />
       ) : (
-        <Container>
-          <Link to='/' className='btn btn-light mb-4'>
-            Go Back
-          </Link>
-        </Container>
+        <Link to='/' className='btn btn-light mb-4'>
+          ফিরে যান
+        </Link>
       )}
-
+      
       {isLoading ? (
         <Loader />
       ) : error ? (
-        <Container>
-          <Message variant='danger'>
-            {error?.data?.message || error.error}
-          </Message>
-        </Container>
+        <Message variant='danger'>
+          {error?.data?.message || error.error}
+        </Message>
       ) : (
-        <Container> {/* প্রোডাক্টগুলোর জন্য কন্টেইনার যাতে দুই পাশে মার্জিন থাকে */}
-          <Meta title='Welcome to GulfHut' />
-          <h1 className='mt-4'>Latest Products</h1>
-          <Row>
+        /* fluid ব্যবহার করে ডানে-বামে জায়গা কমানো হয়েছে */
+        <Container fluid className='px-1 px-md-4'> 
+          <Meta title='GulfHut | সেরা পণ্য সেরা দামে' />
+          
+          <h2 className='text-white my-3 ps-2'>Latest Products</h2>
+          
+          <Row className='g-2 g-md-4'> 
+            {/* g-2 মোবাইলে গ্যাপ কমাবে, g-md-4 পিসিতে গ্যাপ বাড়াবে */}
             {data.products.map((product) => (
-              // xs={6} -> মোবাইলে ২ কলাম
-              // md={4} -> ট্যাবে ৩ কলাম
-              // lg={3} -> পিসিতে ৪ কলাম (পারফেক্ট লুক)
-              <Col key={product._id} xs={6} md={4} lg={3}>
+              <Col 
+                key={product._id} 
+                xs={6}    // মোবাইলে ২ কলাম (১২/৬ = ২)
+                md={4}    // ট্যাবে ৩ কলাম (১২/৪ = ৩)
+                lg={3}    // পিসিতে ৪ কলাম (১২/৩ = ৪)
+                className='d-flex align-items-stretch' // সব কার্ড সমান লম্বা হবে
+              >
                 <Product product={product} />
               </Col>
             ))}
           </Row>
-          <Paginate
-            pages={data.pages}
-            page={data.page}
-            keyword={keyword ? keyword : ''}
-          />
+          
+          <div className='d-flex justify-content-center mt-4'>
+            <Paginate
+              pages={data.pages}
+              page={data.page}
+              keyword={keyword ? keyword : ''}
+            />
+          </div>
         </Container>
       )}
     </>
