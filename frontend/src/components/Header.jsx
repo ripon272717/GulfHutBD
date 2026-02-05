@@ -47,19 +47,25 @@ const Header = () => {
         {`
           .nav-link::after, .dropdown-toggle::after { display: none !important; }
           
-          /* PC Styles */
+          /* PC (Large Screens) */
           .nav-text { font-size: 18px !important; font-weight: bold; }
           .header-icon { font-size: 24px; }
           .brand-text { font-size: 22px !important; }
 
-          /* Mobile Styles */
+          /* Mobile (Small Screens) */
           @media (max-width: 576px) {
             .nav-text { font-size: 16px !important; }
             .header-icon { font-size: 22px; }
-            .user-info-text { font-size: 11px !important; font-weight: bold; }
+            /* মোবাইল ইউজার টেক্সট (নাম ও ব্যালেন্স) */
+            .mobile-user-name { font-size: 11px !important; font-weight: bold; display: block !important; }
+            .mobile-balance { font-size: 11px !important; font-weight: bold; display: block !important; }
             /* প্রোফাইল ইমেজ মোবাইলে বড় */
-            .profile-img-mobile { width: 42px !important; height: 42px !important; border: 1.5px solid #fff !important; }
+            .profile-img-res { width: 42px !important; height: 42px !important; border: 1.5px solid #fff !important; }
+            .container-spacing { padding-left: 5px !important; padding-right: 5px !important; }
           }
+
+          /* General Profile Image */
+          .profile-img-res { width: 35px; height: 35px; border: 2px solid #fff; object-fit: cover; }
 
           .search-box {
             background: #343a40 !important; border: 1px solid #495057 !important;
@@ -73,17 +79,15 @@ const Header = () => {
       </style>
 
       <Navbar bg='dark' variant='dark' fixed='top' className='py-2 shadow-sm flex-column'>
-        <Container className='d-flex align-items-center justify-content-between w-100 px-2'>
+        <Container className='container-spacing d-flex align-items-center justify-content-between w-100'>
           
-          {/* লোগো ও ব্র্যান্ড নেম (পিসিতে লেখা দেখাবে, মোবাইলে শুধু লোগো) */}
+          {/* ১. লোগো ও ক্যাটাগরি */}
           <div className='d-flex align-items-center'>
             <div onClick={goHome} className='d-flex align-items-center' style={{ cursor: 'pointer' }}>
-              <img src={logo} alt='GulfHut' style={{ width: '32px', height: '32px' }} />
-              {/* d-none d-md-inline মানে মোবাইলে হাইড, পিসিতে শো */}
+              <img src={logo} alt='GulfHut' style={{ width: '30px', height: '30px' }} />
               <span className='fw-bold d-none d-md-inline ms-2 text-white brand-text'>GulfHut</span>
             </div>
             
-            {/* ক্যাটাগরি - লোগোর পাশেই */}
             <Nav className='ms-1 ms-md-3'>
               <NavDropdown title={
                 <span className='text-white nav-text d-flex align-items-center'>
@@ -96,7 +100,7 @@ const Header = () => {
             </Nav>
           </div>
 
-          {/* পিসি সার্চবার (লার্জ স্ক্রিন) */}
+          {/* ২. পিসি সার্চবার */}
           <Form onSubmit={submitHandler} className='d-none d-lg-flex flex-grow-1 mx-4' style={{ maxWidth: '350px' }}>
             <InputGroup>
               <Form.Control type='text' value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder='কি খুঁজছেন?' className='search-box' />
@@ -104,16 +108,14 @@ const Header = () => {
             </InputGroup>
           </Form>
 
-          {/* ডান পাশের আইকনসমূহ */}
+          {/* ৩. রাইট সাইড আইকন */}
           <Nav className='d-flex align-items-center flex-row'>
-            {/* মোবাইল সার্চ আইকন */}
-            <div className='d-lg-none me-3 text-white' onClick={() => setShowSearch(!showSearch)} style={{ cursor: 'pointer' }}>
+            <div className='d-lg-none me-2 text-white' onClick={() => setShowSearch(!showSearch)} style={{ cursor: 'pointer' }}>
               {showSearch ? <FaTimes className='header-icon text-warning' /> : <FaSearch className='header-icon' />}
             </div>
 
-            {/* কার্ট আইকন */}
             <LinkContainer to='/cart'>
-              <Nav.Link className='me-3 position-relative p-0 text-white'>
+              <Nav.Link className='me-2 position-relative p-0 text-white'>
                 <FaShoppingCart className='header-icon' />
                 {cartItems.length > 0 && <Badge pill bg='success' style={{ position: 'absolute', top: '-8px', right: '-8px', fontSize: '10px' }}>{cartItems.reduce((a, c) => a + c.qty, 0)}</Badge>}
               </Nav.Link>
@@ -121,23 +123,21 @@ const Header = () => {
 
             {userInfo ? (
               <div className='d-flex align-items-center'>
-                {/* ব্যালেন্স এবং নাম - পিসি ও মোবাইল উভয় জায়গায় */}
+                {/* ব্যালেন্স এবং নাম - মোবাইলে দৃশ্যমান করা হলো */}
                 <div className='d-flex flex-column align-items-end me-1' style={{ lineHeight: '1.2' }}>
-                  <span className='text-warning fw-bold user-info-text'>QR {userInfo.balance}</span>
-                  <span className='text-white user-info-text'>{userInfo.name.split(' ')[0]}</span>
+                  <span className='text-warning mobile-balance'>QR {userInfo.balance}</span>
+                  <span className='text-white mobile-user-name'>{userInfo.name.split(' ')[0]}</span>
                 </div>
 
-                {/* প্রোফাইল ইমেজ (মোবাইলে বড়) */}
+                {/* প্রোফাইল ইমেজ */}
                 <div onClick={goToProfile} style={{ cursor: 'pointer' }} className='mx-1'>
                   <Image 
                     src={userInfo.image || '/images/profile.png'} 
                     roundedCircle 
-                    className='profile-img-mobile shadow-sm'
-                    style={{ width: '35px', height: '35px', border: '2px solid #fff', objectFit: 'cover' }} 
+                    className='profile-img-res shadow-sm'
                   />
                 </div>
 
-                {/* মেনু আইকন */}
                 <NavDropdown 
                   title={
                     <span className='d-flex align-items-center'>
@@ -160,7 +160,7 @@ const Header = () => {
           </Nav>
         </Container>
 
-        {/* মোবাইল সার্চ ড্রপডাউন */}
+        {/* মোবাইল সার্চ */}
         <Collapse in={showSearch}>
           <div className='w-100 d-lg-none bg-dark p-2 border-top border-secondary'>
             <Container>
