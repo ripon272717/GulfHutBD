@@ -1,5 +1,7 @@
-// সরাসরি তোমার রেন্ডার লিঙ্কটা বসাও, শেষে যেন / না থাকে
-export const BASE_URL = 'https://gulf-hut-api.onrender.com'; // এখানে তোমার আসল রেন্ডার লিঙ্কটা দাও
+export const BASE_URL = process.env.NODE_ENV === 'development' 
+  ? 'http://localhost:5000' 
+  : 'https://gulf-hut-api.onrender.com'; // তোমার আসল ব্যাকএন্ড ইউআরএল
+
 export const PRODUCTS_URL = '/api/products';
 export const USERS_URL = '/api/users';
 export const ORDERS_URL = '/api/orders';
