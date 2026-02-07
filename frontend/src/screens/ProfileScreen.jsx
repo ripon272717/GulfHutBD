@@ -4,7 +4,7 @@ import { FaEye, FaEyeSlash, FaCamera } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { useProfileMutation } from '../slices/usersApiSlice';
-import { useUploadProductImageMutation } from '../slices/productsApiSlice'; // এটি চেক করে নিও
+import { useUploadProductImageMutation } from '../slices/productsApiSlice'; 
 import { setCredentials } from '../slices/authSlice';
 import Loader from '../components/Loader';
 
@@ -16,7 +16,6 @@ const ProfileScreen = () => {
   const [image, setImage] = useState('');
   const [uploading, setUploading] = useState(false);
 
-  // পাসওয়ার্ড দেখার জন্য স্টেট
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -24,13 +23,15 @@ const ProfileScreen = () => {
   const [updateProfile, { isLoading: loadingUpdateProfile }] = useProfileMutation();
   const [uploadProductImage] = useUploadProductImageMutation();
 
-  useEffect(() => {
-    setName(userInfo.name);
-    setEmail(userInfo.email);
-    setImage(userInfo.image || '');
-  }, [userInfo.name, userInfo.email, userInfo.image]);
-
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (userInfo) {
+      setName(userInfo.name);
+      setEmail(userInfo.email);
+      setImage(userInfo.image || '');
+    }
+  }, [userInfo]);
 
   const submitHandler = async (e) => {
     e.preventDefault();
@@ -53,20 +54,26 @@ const ProfileScreen = () => {
     }
   };
 
-  // ফাইল আপলোড হ্যান্ডেলার (সরাসরি কম্পিউটার থেকে)
+  // ইমেজ আপলোড হ্যান্ডেলার
   const uploadFileHandler = async (e) => {
     const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append('image', file);
-    setUploading(true);
+    if (!file) return;
 
+    const formData = new FormData();
+    formData.append('image', file); // 'image' নামটি ব্যাকএন্ডের সাথে মিলতে হবে
+
+    setUploading(true);
     try {
+      // স্লাইস থেকে মিউটেশন কল করা হচ্ছে
       const res = await uploadProductImage(formData).unwrap();
-      toast.success(res.message);
-      setImage(res.image);
-      setUploading(false);
+      
+      // সফল হলে ক্লাউডিনারি ইউআরএল সেট হবে
+      setImage(res.image); 
+      toast.success('Image uploaded successfully');
     } catch (err) {
-      toast.error(err?.data?.message || err.error);
+      console.error('Upload error details:', err);
+      toast.error(err?.data?.message || 'File upload failed. Try a smaller JPG/PNG.');
+    } finally {
       setUploading(false);
     }
   };
@@ -78,7 +85,7 @@ const ProfileScreen = () => {
 
         <div className='text-center mb-4 position-relative'>
           <img
-            src={image || '/images/profile.png'}
+            src={image || userInfo.image || '/images/profile.png'}
             alt='profile'
             style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #ffc107' }}
           />
@@ -92,9 +99,10 @@ const ProfileScreen = () => {
             type='file' 
             id='image-upload' 
             hidden 
+            accept="image/*"
             onChange={uploadFileHandler} 
           />
-          {uploading && <Loader />}
+          {uploading && <div className='mt-2'><Loader /></div>}
         </div>
 
         <Form onSubmit={submitHandler}>
@@ -108,7 +116,6 @@ const ProfileScreen = () => {
             <Form.Control type='email' placeholder='Enter email' value={email} onChange={(e) => setEmail(e.target.value)} />
           </Form.Group>
 
-          {/* Password with Eye Icon */}
           <Form.Group className='my-2' controlId='password'>
             <Form.Label>Password</Form.Label>
             <InputGroup>
@@ -139,11 +146,9 @@ const ProfileScreen = () => {
             </InputGroup>
           </Form.Group>
 
-          <Button type='submit' variant='warning' className='mt-3 w-100 fw-bold' disabled={uploading}>
-            Update Profile
+          <Button type='submit' variant='warning' className='mt-3 w-100 fw-bold' disabled={uploading || loadingUpdateProfile}>
+            {loadingUpdateProfile ? 'Updating...' : 'Update Profile'}
           </Button>
-
-          {loadingUpdateProfile && <Loader />}
         </Form>
       </Col>
     </Row>
