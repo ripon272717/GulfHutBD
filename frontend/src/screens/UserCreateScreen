@@ -1,0 +1,100 @@
+import React, { useState } from 'react';
+import { Form, Button, Container } from 'react-bootstrap';
+import { useNavigate, Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { useRegisterMutation } from '../../slices/usersApiSlice';
+import Loader from '../../components/Loader';
+
+const UserCreateScreen = () => {
+  const [name, setName] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [register, { isLoading }] = useRegisterMutation();
+  const navigate = useNavigate();
+
+  const submitHandler = async (e) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      toast.error('পাসওয়ার্ড মিলছে না!');
+    } else {
+      try {
+        // এখানে সরাসরি রেজিস্ট্রেশন এপিআই ব্যবহার করছি
+        await register({ name, mobile, password }).unwrap();
+        toast.success('নতুন ইউজার সফলভাবে তৈরি হয়েছে');
+        navigate('/admin/userlist');
+      } catch (err) {
+        toast.error(err?.data?.message || err.error);
+      }
+    }
+  };
+
+  return (
+    <Container className='mt-5 pt-5'>
+      <Link to='/admin/userlist' className='btn btn-light my-3'>
+        ফিরে যান
+      </Link>
+      <div className='p-4 bg-dark rounded shadow border border-warning' style={{ maxWidth: '500px', margin: 'auto' }}>
+        <h2 className='text-white mb-4 text-center'>নতুন ইউজার তৈরি করুন</h2>
+        {isLoading && <Loader />}
+        
+        <Form onSubmit={submitHandler}>
+          <Form.Group controlId='name' className='my-2'>
+            <Form.Label className='text-white'>নাম</Form.Label>
+            <Form.Control
+              type='text'
+              placeholder='ইউজারের নাম লিখুন'
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className='bg-secondary text-white border-0'
+              required
+            ></Form.Control>
+          </Form.Group>
+
+          <Form.Group controlId='mobile' className='my-2'>
+            <Form.Label className='text-white'>মোবাইল নম্বর</Form.Label>
+            <Form.Control
+              type='text'
+              placeholder='মোবাইল নম্বর লিখুন'
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
+              className='bg-secondary text-white border-0'
+              required
+            ></Form.Control>
+          </Form.Group>
+
+          <Form.Group controlId='password' style={{ position: 'relative' }} className='my-2'>
+            <Form.Label className='text-white'>পাসওয়ার্ড</Form.Label>
+            <Form.Control
+              type='password'
+              placeholder='পাসওয়ার্ড দিন'
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className='bg-secondary text-white border-0'
+              required
+            ></Form.Control>
+          </Form.Group>
+
+          <Form.Group controlId='confirmPassword' style={{ position: 'relative' }} className='my-2'>
+            <Form.Label className='text-white'>পাসওয়ার্ড নিশ্চিত করুন</Form.Label>
+            <Form.Control
+              type='password'
+              placeholder='আবার পাসওয়ার্ড দিন'
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className='bg-secondary text-white border-0'
+              required
+            ></Form.Control>
+          </Form.Group>
+
+          <Button type='submit' variant='warning' className='mt-3 fw-bold w-100 py-2'>
+            আইডি তৈরি করুন
+          </Button>
+        </Form>
+      </div>
+    </Container>
+  );
+};
+
+export default UserCreateScreen;
