@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Form, Button, Row, Col, InputGroup } from 'react-bootstrap'; // InputGroup যোগ করা হয়েছে
-import { FaEye, FaEyeSlash } from 'react-icons/fa'; // আইকন ইমপোর্ট
+import { Form, Button, Row, Col, InputGroup } from 'react-bootstrap';
+import { FaEye, FaEyeSlash } from 'react-icons/fa'; 
 import { useDispatch, useSelector } from 'react-redux';
 import Loader from '../components/Loader';
 import FormContainer from '../components/FormContainer';
@@ -13,7 +13,7 @@ import { toast } from 'react-toastify';
 const LoginScreen = () => {
   const [identity, setIdentity] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // পাসওয়ার্ড দেখানোর স্টেট
+  const [showPassword, setShowPassword] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -46,10 +46,10 @@ const LoginScreen = () => {
 
   return (
     <FormContainer>
-      <h1 className='mb-4'>লগইন করুন</h1>
+      <h1 className='mb-4 text-center'>লগইন করুন</h1>
 
       <Form onSubmit={submitHandler}>
-        <Form.Group className='my-2' controlId='identity'>
+        <Form.Group className='my-3' controlId='identity'>
           <Form.Label>মোবাইল / নাম / ইমেইল</Form.Label>
           <Form.Control
             type='text'
@@ -60,11 +60,11 @@ const LoginScreen = () => {
           ></Form.Control>
         </Form.Group>
 
-        <Form.Group className='my-2' controlId='password'>
+        <Form.Group className='my-3' controlId='password'>
           <Form.Label>পাসওয়ার্ড (Password)</Form.Label>
-          <InputGroup> {/* ইনপুট গ্রুপ শুরু */}
+          <InputGroup>
             <Form.Control
-              type={showPassword ? 'text' : 'password'} // টগল লজিক
+              type={showPassword ? 'text' : 'password'}
               placeholder='পাসওয়ার্ড দিন'
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -72,14 +72,14 @@ const LoginScreen = () => {
             ></Form.Control>
             <InputGroup.Text 
               onClick={() => setShowPassword(!showPassword)} 
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: 'pointer', background: 'transparent' }}
             >
-              {showPassword ? <FaEyeSlash /> : <FaEye />} {/* আইকন পরিবর্তন */}
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
             </InputGroup.Text>
           </InputGroup>
         </Form.Group>
 
-        <Button disabled={isLoading} type='submit' variant='primary' className='mt-3 w-100 py-2'>
+        <Button disabled={isLoading} type='submit' variant='primary' className='mt-3 w-100 py-2 fw-bold'>
           প্রবেশ করুন
         </Button>
 
