@@ -6,14 +6,14 @@ import { CloudinaryStorage } from 'multer-storage-cloudinary';
 
 const router = express.Router();
 
-// ক্লাউডিনারি কনফিগারেশন
+// ১. ক্লাউডিনারি কনফিগারেশন
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// ইমেজ স্টোরেজ সেটিংস
+// ২. স্টোরেজ সেটআপ
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -22,8 +22,8 @@ const storage = new CloudinaryStorage({
   },
 });
 
-// ফাইল টাইপ ফিল্টার
-function fileFilter(req, file, cb) {
+// ৩. ফাইল ফিল্টার (শুধু ইমেজ অ্যালাউ করবে)
+const fileFilter = (req, file, cb) => {
   const filetypes = /jpe?g|png|webp/;
   const mimetypes = /image\/jpe?g|image\/png|image\/webp/;
 
@@ -35,28 +35,34 @@ function fileFilter(req, file, cb) {
   } else {
     cb(new Error('Images only! (jpg, png, webp)'), false);
   }
-}
+};
 
 const upload = multer({ 
   storage, 
   fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 } 
+  limits: { fileSize: 5 * 1024 * 1024 } // ৫ এমবি লিমিট (সেফ সাইড)
 });
 
 const uploadSingleImage = upload.single('image');
 
+// ৪. পোস্ট রুট
 router.post('/', (req, res) => {
   uploadSingleImage(req, res, function (err) {
     if (err instanceof multer.MulterError) {
+      console.error('Multer Error:', err.message);
       return res.status(400).send({ message: `Multer Error: ${err.message}` });
     } else if (err) {
+      console.error('Upload Error:', err.message);
       return res.status(400).send({ message: err.message });
     }
 
     if (!req.file) {
+      console.error('No file found in request');
       return res.status(400).send({ message: 'No file uploaded!' });
     }
 
+    // সফল হলে ক্লাউডিনারি ইউআরএল পাঠাবে
+    console.log('Upload Success:', req.file.path);
     res.status(200).send({
       message: 'Image uploaded successfully',
       image: req.file.path,
