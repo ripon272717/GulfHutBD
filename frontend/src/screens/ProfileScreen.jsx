@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, Row, Col } from 'react-bootstrap';
+import { Form, Button, Row, Col, InputGroup, Card, Stack } from 'react-bootstrap';
+import { FaEye, FaEyeSlash, FaCamera, FaShareAlt, FaUserPlus, FaLink } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import Loader from '../components/Loader';
-import { useUpdateUserMutation } from '../slices/usersApiSlice';
+import { useProfileMutation } from '../slices/usersApiSlice';
+import { useUploadProductImageMutation } from '../slices/productsApiSlice'; 
 import { setCredentials } from '../slices/authSlice';
-import axios from 'axios';
+import Loader from '../components/Loader';
 
 const ProfileScreen = () => {
   const [name, setName] = useState('');
@@ -15,37 +16,52 @@ const ProfileScreen = () => {
   const [image, setImage] = useState('');
   const [uploading, setUploading] = useState(false);
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const { userInfo } = useSelector((state) => state.auth);
-
-  const [updateProfile, { isLoading: loadingUpdateProfile }] = useUpdateUserMutation();
-
   const dispatch = useDispatch();
+  const [updateProfile, { isLoading: loadingUpdateProfile }] = useProfileMutation();
+  const [uploadProductImage] = useUploadProductImageMutation();
 
   useEffect(() => {
-    setName(userInfo.name);
-    setEmail(userInfo.email);
-    setImage(userInfo.image || '');
-  }, [userInfo.name, userInfo.email, userInfo.image]);
+    if (userInfo) {
+      setName(userInfo.name);
+      setEmail(userInfo.email);
+      setImage(userInfo.image || '');
+    }
+  }, [userInfo]);
 
-  // ছবি আপলোড হ্যান্ডলার (Cloudinary)
+  // ইনভাইট লিঙ্ক জেনারেটর
+  const inviteLink = `${window.location.origin}/register?invite=${userInfo._id}`;
+
+  const copyInviteLink = () => {
+    navigator.clipboard.writeText(inviteLink);
+    toast.success('Link copied!');
+  };
+
+  const shareFriend = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: 'GulfHutBD',
+        text: 'Join GulfHutBD!',
+        url: inviteLink,
+      }).catch(console.error);
+    } else {
+      copyInviteLink();
+    }
+  };
+
   const uploadFileHandler = async (e) => {
     const file = e.target.files[0];
     const formData = new FormData();
     formData.append('image', file);
     setUploading(true);
-
     try {
-      const config = {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      };
-
-      // আপনার backend URL অনুযায়ী কল হবে
-      const { data } = await axios.post('/api/upload', formData, config);
-      
-      setImage(data.image); // ক্লাউডিনারি থেকে আসা লিঙ্ক সেট হবে
-      toast.success('Image uploaded successfully');
+      const res = await uploadProductImage(formData).unwrap();
+      setImage(res.image); 
+      dispatch(setCredentials({ ...userInfo, image: res.image }));
+      toast.success('Image uploaded!');
       setUploading(false);
     } catch (err) {
       toast.error(err?.data?.message || err.error);
@@ -59,18 +75,9 @@ const ProfileScreen = () => {
       toast.error('Passwords do not match');
     } else {
       try {
-        const res = await updateProfile({
-          _id: userInfo._id,
-          name,
-          email,
-          password,
-          image, // নতুন ছবির লিঙ্ক এখানে যাবে
-        }).unwrap();
-
-        // এই লাইনটিই LocalStorage এবং Header-এর ছবি আপডেট করবে
-        dispatch(setCredentials({ ...res }));
-        
-        toast.success('Profile updated successfully');
+        const res = await updateProfile({ _id: userInfo._id, name, email, password, image }).unwrap();
+        dispatch(setCredentials({ ...userInfo, ...res }));
+        toast.success('Profile updated');
       } catch (err) {
         toast.error(err?.data?.message || err.error);
       }
@@ -78,74 +85,78 @@ const ProfileScreen = () => {
   };
 
   return (
-    <Row>
-      <Col md={3}>
-        <h2>User Profile</h2>
+    <Row className='justify-content-md-center mt-3 mx-0'>
+      <Col xs={12} md={6}>
+        {/* সবার উপরে বাটনগুলো */}
+        <div className='mb-4'>
+          <Stack gap={2}>
+             <Button variant='warning' className='d-flex align-items-center justify-content-center gap-2 fw-bold text-dark' onClick={copyInviteLink}>
+                <FaLink /> Copy Invite Link
+             </Button>
+             <div className='d-flex gap-2'>
+                <Button variant='info' className='flex-grow-1 d-flex align-items-center justify-content-center gap-2 text-white' onClick={shareFriend}>
+                  <FaShareAlt /> Share
+                </Button>
+                <Button variant='success' className='flex-grow-1 d-flex align-items-center justify-content-center gap-2' onClick={shareFriend}>
+                  <FaUserPlus /> Invite
+                </Button>
+             </div>
+          </Stack>
+        </div>
 
-        <Form onSubmit={submitHandler}>
-          <Form.Group className='my-2' controlId='name'>
-            <Form.Label>Name</Form.Label>
-            <Form.Control
-              type='text'
-              placeholder='Enter name'
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            ></Form.Control>
-          </Form.Group>
+        <Card className='p-4 shadow border-0 bg-dark text-white rounded-4'>
+          <h2 className='text-center mb-4'>User Profile</h2>
 
-          <Form.Group className='my-2' controlId='email'>
-            <Form.Label>Email Address</Form.Label>
-            <Form.Control
-              type='email'
-              placeholder='Enter email'
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            ></Form.Control>
-          </Form.Group>
-
-          {/* ইমেজ আপলোড সেকশন */}
-          <Form.Group className='my-2' controlId='image'>
-            <Form.Label>Profile Picture</Form.Label>
-            <Form.Control
-              type='text'
-              placeholder='Enter image url'
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-            ></Form.Control>
-            <Form.Control
-              label='Choose File'
-              onChange={uploadFileHandler}
-              type='file'
-            ></Form.Control>
+          <div className='text-center mb-4 position-relative'>
+            <img
+              src={image || userInfo.image || '/images/profile.png'}
+              alt='profile'
+              style={{ width: '110px', height: '110px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #ffc107' }}
+            />
+            <label htmlFor='image-upload' style={{ position: 'absolute', bottom: '0', left: '55%', cursor: 'pointer', background: '#ffc107', padding: '8px', borderRadius: '50%', color: '#000' }}>
+              <FaCamera size={14}/>
+            </label>
+            <input type='file' id='image-upload' hidden onChange={uploadFileHandler} />
             {uploading && <Loader />}
-          </Form.Group>
+          </div>
 
-          <Form.Group className='my-2' controlId='password'>
-            <Form.Label>Password</Form.Label>
-            <Form.Control
-              type='password'
-              placeholder='Enter password'
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            ></Form.Control>
-          </Form.Group>
+          <Form onSubmit={submitHandler}>
+            <Form.Group className='mb-3' controlId='name'>
+              <Form.Label>Name</Form.Label>
+              <Form.Control type='text' value={name} onChange={(e) => setName(e.target.value)} />
+            </Form.Group>
 
-          <Form.Group className='my-2' controlId='confirmPassword'>
-            <Form.Label>Confirm Password</Form.Label>
-            <Form.Control
-              type='password'
-              placeholder='Confirm password'
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            ></Form.Control>
-          </Form.Group>
+            <Form.Group className='mb-3' controlId='email'>
+              <Form.Label>Email Address</Form.Label>
+              <Form.Control type='email' value={email} onChange={(e) => setEmail(e.target.value)} />
+            </Form.Group>
 
-          <Button type='submit' variant='primary' className='mt-3'>
-            Update
-          </Button>
+            <Form.Group className='mb-3' controlId='password'>
+              <Form.Label>New Password</Form.Label>
+              <InputGroup>
+                <Form.Control type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} />
+                <InputGroup.Text onClick={() => setShowPassword(!showPassword)} style={{ cursor: 'pointer' }}>
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </InputGroup.Text>
+              </InputGroup>
+            </Form.Group>
 
+            <Form.Group className='mb-4' controlId='confirmPassword'>
+              <Form.Label>Confirm Password</Form.Label>
+              <InputGroup>
+                <Form.Control type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                <InputGroup.Text onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{ cursor: 'pointer' }}>
+                  {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                </InputGroup.Text>
+              </InputGroup>
+            </Form.Group>
+
+            <Button type='submit' variant='warning' className='w-100 fw-bold py-2 shadow-sm' disabled={uploading}>
+              Update Profile
+            </Button>
+          </Form>
           {loadingUpdateProfile && <Loader />}
-        </Form>
+        </Card>
       </Col>
     </Row>
   );
