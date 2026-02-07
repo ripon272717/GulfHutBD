@@ -1,6 +1,6 @@
 export const BASE_URL = process.env.NODE_ENV === 'development' 
   ? 'http://localhost:5000' 
-  : 'https://gulf-hut-api.onrender.com'; // তোমার আসল ব্যাকএন্ড ইউআরএল
+  : 'https://gulfhutbd6.onrender.com'; // আপনার সঠিক রেন্ডার ইউআরএল
 
 export const PRODUCTS_URL = '/api/products';
 export const USERS_URL = '/api/users';
