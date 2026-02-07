@@ -1,21 +1,23 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Form, Button, Row, Col, Alert } from 'react-bootstrap';
+import { Form, Button, Row, Col, InputGroup } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
+import { FaEye, FaEyeSlash, FaUser, FaEnvelope, FaLock } from 'react-icons/fa';
 import Loader from '../components/Loader';
 import FormContainer from '../components/FormContainer';
-
 import { useRegisterMutation } from '../slices/usersApiSlice';
 import { setCredentials } from '../slices/authSlice';
 import { toast } from 'react-toastify';
 
 const RegisterScreen = () => {
   const [name, setName] = useState('');
-  const [mobile, setMobile] = useState(''); // নতুন মোবাইল স্টেট
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [referredBy, setReferredBy] = useState('');
+  
+  // পাসওয়ার্ড শো/হাইড করার জন্য স্টেট
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -29,12 +31,6 @@ const RegisterScreen = () => {
   const redirect = sp.get('redirect') || '/';
 
   useEffect(() => {
-    // লোকাল স্টোরেজ থেকে রেফারেল কোড চেক করা
-    const savedRefCode = localStorage.getItem('referrerCode');
-    if (savedRefCode) {
-      setReferredBy(savedRefCode);
-    }
-
     if (userInfo) {
       navigate(redirect);
     }
@@ -43,33 +39,13 @@ const RegisterScreen = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
 
-    // মোবাইল নম্বর ভ্যালিডেশন
-    if (mobile.length < 11) {
-      toast.error('সঠিক মোবাইল নম্বর দিন (কমপক্ষে ১১ ডিজিট)');
-      return;
-    }
-
     if (password !== confirmPassword) {
-      toast.error('পাসওয়ার্ড ম্যাচ করছে না!');
+      toast.error('Passwords do not match');
     } else {
       try {
-        const res = await register({ 
-          name, 
-          mobile, // মোবাইল নম্বর পাঠানো হচ্ছে
-          email, 
-          password, 
-          referredBy 
-        }).unwrap();
-        
+        const res = await register({ name, email, password }).unwrap();
         dispatch(setCredentials({ ...res }));
-        localStorage.removeItem('referrerCode'); 
         navigate(redirect);
-        
-        if(referredBy) {
-          toast.success('রেফারেল বোনাস সফলভাবে যোগ করা হয়েছে!');
-        } else {
-          toast.success('রেজিস্ট্রেশন সফল হয়েছে');
-        }
       } catch (err) {
         toast.error(err?.data?.message || err.error);
       }
@@ -78,84 +54,114 @@ const RegisterScreen = () => {
 
   return (
     <FormContainer>
-      <h1 className='mb-4'>অ্যাকাউন্ট তৈরি করুন</h1>
-      
-      {referredBy && (
-        <Alert variant='success' className='border-success shadow-sm'>
-          🎉 <strong>অভিনন্দন!</strong> আপনি একটি ইনভাইট লিঙ্ক ব্যবহার করছেন। জয়েন করলেই বোনাস পাবেন।
-        </Alert>
-      )}
+      <style>
+        {`
+          .register-card { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+          .form-label { font-weight: bold; font-size: 14px; color: #555; }
+          .input-group-text { background: transparent; border-right: none; color: #888; }
+          .form-control { border-left: none; padding-left: 0; }
+          .form-control:focus { box-shadow: none; border-color: #ced4da; }
+          .eye-icon { cursor: pointer; background: transparent; border-left: none; color: #888; }
+          .register-btn { background: #ffc107; border: none; color: #000; font-weight: bold; padding: 12px; border-radius: 10px; transition: 0.3s; }
+          .register-btn:hover { background: #e0a800; }
+        `}
+      </style>
 
-      <Form onSubmit={submitHandler}>
-        <Form.Group className='my-2' controlId='name'>
-          <Form.Label>আপনার নাম (Name/Username)</Form.Label>
-          <Form.Control
-            type='text'
-            placeholder='সম্পূর্ণ নাম লিখুন'
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          ></Form.Control>
-        </Form.Group>
+      <div className="register-card mt-5">
+        <h1 className='text-center mb-4'>Create Account</h1>
 
-        <Form.Group className='my-2' controlId='mobile'>
-          <Form.Label>মোবাইল নম্বর (Mobile Number)</Form.Label>
-          <Form.Control
-            type='text'
-            placeholder='০১৭XXXXXXXX'
-            value={mobile}
-            onChange={(e) => setMobile(e.target.value)}
-            required
-          ></Form.Control>
-        </Form.Group>
+        <Form onSubmit={submitHandler}>
+          {/* Name Field */}
+          <Form.Group className='my-3' controlId='name'>
+            <Form.Label>Full Name</Form.Label>
+            <InputGroup>
+              <InputGroup.Text><FaUser /></InputGroup.Text>
+              <Form.Control
+                type='text'
+                placeholder='Enter name'
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </InputGroup>
+          </Form.Group>
 
-        <Form.Group className='my-2' controlId='email'>
-          <Form.Label>ইমেইল এড্রেস <small className='text-muted'>(ঐচ্ছিক)</small></Form.Label>
-          <Form.Control
-            type='email'
-            placeholder='example@mail.com'
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          ></Form.Control>
-        </Form.Group>
+          {/* Email Field */}
+          <Form.Group className='my-3' controlId='email'>
+            <Form.Label>Email Address</Form.Label>
+            <InputGroup>
+              <InputGroup.Text><FaEnvelope /></InputGroup.Text>
+              <Form.Control
+                type='email'
+                placeholder='Enter email'
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </InputGroup>
+          </Form.Group>
 
-        <Form.Group className='my-2' controlId='password'>
-          <Form.Label>পাসওয়ার্ড (Password)</Form.Label>
-          <Form.Control
-            type='password'
-            placeholder='পাসওয়ার্ড দিন'
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          ></Form.Control>
-        </Form.Group>
-        
-        <Form.Group className='my-2' controlId='confirmPassword'>
-          <Form.Label>পাসওয়ার্ড নিশ্চিত করুন</Form.Label>
-          <Form.Control
-            type='password'
-            placeholder='আবার পাসওয়ার্ড দিন'
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          ></Form.Control>
-        </Form.Group>
+          {/* Password Field */}
+          <Form.Group className='my-3' controlId='password'>
+            <Form.Label>Password</Form.Label>
+            <InputGroup>
+              <InputGroup.Text><FaLock /></InputGroup.Text>
+              <Form.Control
+                type={showPassword ? 'text' : 'password'}
+                placeholder='Enter password'
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{ borderRight: 'none' }}
+              />
+              <InputGroup.Text 
+                className="eye-icon" 
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </InputGroup.Text>
+            </InputGroup>
+          </Form.Group>
 
-        <Button disabled={isLoading} type='submit' variant='primary' className='mt-3 w-100 py-2'>
-          রেজিস্ট্রেশন সম্পন্ন করুন
-        </Button>
+          {/* Confirm Password Field */}
+          <Form.Group className='my-3' controlId='confirmPassword'>
+            <Form.Label>Confirm Password</Form.Label>
+            <InputGroup>
+              <InputGroup.Text><FaLock /></InputGroup.Text>
+              <Form.Control
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder='Confirm password'
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                style={{ borderRight: 'none' }}
+              />
+              <InputGroup.Text 
+                className="eye-icon" 
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              </InputGroup.Text>
+            </InputGroup>
+          </Form.Group>
 
-        {isLoading && <Loader />}
-      </Form>
+          <Button 
+            disabled={isLoading} 
+            type='submit' 
+            variant='primary' 
+            className='w-100 mt-4 register-btn'
+          >
+            {isLoading ? 'Creating Account...' : 'Register'}
+          </Button>
 
-      <Row className='py-3'>
-        <Col className='text-center'>
-          আগে থেকেই অ্যাকাউন্ট আছে?{' '}
-          <Link to={redirect ? `/login?redirect=${redirect}` : '/login'} className='fw-bold'>
-            লগইন করুন
-          </Link>
-        </Col>
-      </Row>
+          {isLoading && <Loader />}
+        </Form>
+
+        <Row className='py-3'>
+          <Col className='text-center'>
+            Already have an account?{' '}
+            <Link to={redirect ? `/login?redirect=${redirect}` : '/login'} style={{ color: '#ffc107', fontWeight: 'bold', textDecoration: 'none' }}>
+              Login
+            </Link>
+          </Col>
+        </Row>
+      </div>
     </FormContainer>
   );
 };
