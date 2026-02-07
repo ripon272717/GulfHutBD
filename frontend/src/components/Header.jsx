@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { useLogoutMutation } from '../slices/usersApiSlice';
 import { logout } from '../slices/authSlice';
 
-import logo from '../assets/Ourlogo.png';
+import logo from '../assets/ourlogo.png';
 
 const Header = () => {
   const [showSearch, setShowSearch] = useState(false);
@@ -78,7 +78,7 @@ const Header = () => {
         `}
       </style>
 
-      <Navbar bg='dark' variant='dark' fixed='top' className='py-2 shadow-sm flex-column'>
+      <Navbar bg='dark' variant='dark' expand='lg' fixed='top' className='py-2 shadow-sm'>
         <Container className='container-spacing d-flex align-items-center justify-content-between w-100'>
           
           {/* ১. লোগো ও ক্যাটাগরি */}
