@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { useLogoutMutation } from '../slices/usersApiSlice';
 import { logout } from '../slices/authSlice';
 
-import logo from '../assets/ourlogo.png';
+import logo from '../assets/gulflogo.png';
 
 const Header = () => {
   const [showSearch, setShowSearch] = useState(false);
