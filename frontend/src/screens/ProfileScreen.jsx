@@ -4,6 +4,7 @@ import { FaEye, FaEyeSlash, FaCamera } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { useProfileMutation } from '../slices/usersApiSlice';
+import { useUploadProductImageMutation } from '../slices/productsApiSlice'; // এটি চেক করে নিও
 import { setCredentials } from '../slices/authSlice';
 import Loader from '../components/Loader';
 
@@ -13,13 +14,15 @@ const ProfileScreen = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [image, setImage] = useState('');
-  
-  // পাসওয়ার্ড দেখার জন্য স্টেট
+  const [uploading, setUploading] = useState(false);
+
+  // পাসওয়ার্ড দেখার জন্য স্টেট
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { userInfo } = useSelector((state) => state.auth);
   const [updateProfile, { isLoading: loadingUpdateProfile }] = useProfileMutation();
+  const [uploadProductImage] = useUploadProductImageMutation();
 
   useEffect(() => {
     setName(userInfo.name);
@@ -50,12 +53,21 @@ const ProfileScreen = () => {
     }
   };
 
-  // ইমেজ আপলোড হ্যান্ডেলার (ইউআরএল ভিত্তিক)
-  const uploadFileHandler = (e) => {
-    const fileUrl = prompt("Enter your Image URL (Cloudinary/Direct Link):");
-    if (fileUrl) {
-      setImage(fileUrl);
-      toast.info('Image URL added!');
+  // ফাইল আপলোড হ্যান্ডেলার (সরাসরি কম্পিউটার থেকে)
+  const uploadFileHandler = async (e) => {
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append('image', file);
+    setUploading(true);
+
+    try {
+      const res = await uploadProductImage(formData).unwrap();
+      toast.success(res.message);
+      setImage(res.image);
+      setUploading(false);
+    } catch (err) {
+      toast.error(err?.data?.message || err.error);
+      setUploading(false);
     }
   };
 
@@ -70,12 +82,19 @@ const ProfileScreen = () => {
             alt='profile'
             style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #ffc107' }}
           />
-          <div 
-            onClick={uploadFileHandler}
-            style={{ position: 'absolute', bottom: '5px', left: '55%', cursor: 'pointer', background: '#343a40', padding: '5px', borderRadius: '50%', color: '#fff' }}
+          <label 
+            htmlFor='image-upload'
+            style={{ position: 'absolute', bottom: '5px', left: '55%', cursor: 'pointer', background: '#343a40', padding: '10px', borderRadius: '50%', color: '#fff' }}
           >
             <FaCamera />
-          </div>
+          </label>
+          <input 
+            type='file' 
+            id='image-upload' 
+            hidden 
+            onChange={uploadFileHandler} 
+          />
+          {uploading && <Loader />}
         </div>
 
         <Form onSubmit={submitHandler}>
@@ -120,7 +139,7 @@ const ProfileScreen = () => {
             </InputGroup>
           </Form.Group>
 
-          <Button type='submit' variant='warning' className='mt-3 w-100 fw-bold'>
+          <Button type='submit' variant='warning' className='mt-3 w-100 fw-bold' disabled={uploading}>
             Update Profile
           </Button>
 
