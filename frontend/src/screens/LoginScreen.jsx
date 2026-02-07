@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Form, Button, Row, Col } from 'react-bootstrap';
+import { Form, Button, Row, Col, InputGroup } from 'react-bootstrap'; // InputGroup যোগ করা হয়েছে
+import { FaEye, FaEyeSlash } from 'react-icons/fa'; // আইকন ইমপোর্ট
 import { useDispatch, useSelector } from 'react-redux';
 import Loader from '../components/Loader';
 import FormContainer from '../components/FormContainer';
@@ -10,9 +11,9 @@ import { setCredentials } from '../slices/authSlice';
 import { toast } from 'react-toastify';
 
 const LoginScreen = () => {
-  // এখন 'email' এর বদলে 'identity' স্টেট ব্যবহার করছি
   const [identity, setIdentity] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // পাসওয়ার্ড দেখানোর স্টেট
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -34,11 +35,10 @@ const LoginScreen = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
     try {
-      // ব্যাকএন্ডে 'identity' হিসেবে ডাটা পাঠানো হচ্ছে
       const res = await login({ identity, password }).unwrap();
       dispatch(setCredentials({ ...res }));
       navigate(redirect);
-      toast.success('লগইন সফল হয়েছে');
+      toast.success('লগইন সফল হয়েছে');
     } catch (err) {
       toast.error(err?.data?.message || err.error);
     }
@@ -61,14 +61,22 @@ const LoginScreen = () => {
         </Form.Group>
 
         <Form.Group className='my-2' controlId='password'>
-          <Form.Label>পাসওয়ার্ড (Password)</Form.Label>
-          <Form.Control
-            type='password'
-            placeholder='পাসওয়ার্ড দিন'
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          ></Form.Control>
+          <Form.Label>পাসওয়ার্ড (Password)</Form.Label>
+          <InputGroup> {/* ইনপুট গ্রুপ শুরু */}
+            <Form.Control
+              type={showPassword ? 'text' : 'password'} // টগল লজিক
+              placeholder='পাসওয়ার্ড দিন'
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            ></Form.Control>
+            <InputGroup.Text 
+              onClick={() => setShowPassword(!showPassword)} 
+              style={{ cursor: 'pointer' }}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />} {/* আইকন পরিবর্তন */}
+            </InputGroup.Text>
+          </InputGroup>
         </Form.Group>
 
         <Button disabled={isLoading} type='submit' variant='primary' className='mt-3 w-100 py-2'>
@@ -87,11 +95,10 @@ const LoginScreen = () => {
         </Col>
       </Row>
 
-      {/* পাসওয়ার্ড রিকভারি লিঙ্ক (ভবিষ্যতের জন্য) */}
       <Row>
         <Col className='text-center'>
           <Link to='/forgot-password' style={{ fontSize: '0.85rem', color: 'gray' }}>
-            পাসওয়ার্ড ভুলে গেছেন?
+            পাসওয়ার্ড ভুলে গেছেন?
           </Link>
         </Col>
       </Row>
