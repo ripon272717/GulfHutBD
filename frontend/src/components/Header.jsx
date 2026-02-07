@@ -132,10 +132,11 @@ const Header = () => {
                 {/* প্রোফাইল ইমেজ */}
                 <div onClick={goToProfile} style={{ cursor: 'pointer' }} className='mx-1'>
                   <Image 
-                    src={userInfo.image || '/images/profile.png'} 
-                    roundedCircle 
-                    className='profile-img-res shadow-sm'
-                  />
+  src={userInfo?.image ? userInfo.image : '/images/profile.png'} 
+  roundedCircle 
+  className='profile-img-res shadow-sm'
+  style={{ width: '40px', height: '40px', objectFit: 'cover' }} // সাইজ ফিক্স করে দেওয়া ভালো
+/>
                 </div>
 
                 <NavDropdown 

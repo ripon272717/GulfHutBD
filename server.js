@@ -20,13 +20,18 @@ connectDB();
 const app = express();
 
 // ১. CORS কনফিগারেশন (এটিই সবচেয়ে গুরুত্বপূর্ণ)
+// ১. CORS কনফিগারেশন
 app.use(cors({
-  origin: true, // সব ডোমেইন (Vercel, Localhost) অ্যালাউ করবে
+  origin: [
+    'https://gulfhutbd6.onrender.com', 
+    'http://localhost:3000' // আপনার লোকাল ডেভেলপমেন্টের জন্য
+  ],
   credentials: true
 }));
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '10mb' })); // ৫০ মেগাবাইট অনেক বেশি, ১০ মেগাবাইট ছবির জন্য যথেষ্ট
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 app.use(cookieParser());
 
 // ২. টেস্ট রুট (যাতে ব্রাউজারে চেক করা যায়)
