@@ -180,6 +180,22 @@ const Header = () => {
           </div>
         </Collapse>
       </Navbar>
+      // Header.jsx এর নিচের অংশে (Navbar এর ঠিক নিচে) এই Marquee টুকু যোগ কর:
+<>
+  <Navbar bg='dark' variant='dark' fixed='top' className='shadow-sm p-0'>
+    {/* ... তোর আগের Navbar কোড ... */}
+  </Navbar>
+
+  {/* Marquee Notice Board */}
+  <div className="marquee-box" style={{ 
+  marginTop: '75px', // পিসিতে ৭৫ থাকবে, মোবাইলে সিএসএস দিয়ে ৬০ হয়ে যাবে
+  background: '#ffc107', 
+  fontSize: '22px', 
+  padding: '5px 0' 
+}}>
+  <marquee>আপনার নোটিশ এখানে...</marquee>
+</div>
+</>
 
       {/* ড্রয়ার বা সাইডবার */}
       <Offcanvas show={showSidebar} onHide={handleCloseSidebar} placement='end' className='bg-dark text-white'>

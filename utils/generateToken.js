@@ -8,11 +8,11 @@ const generateToken = (res, userId) => {
   const isDev = process.env.NODE_ENV !== 'production';
 
   res.cookie('jwt', token, {
-    httpOnly: true,
-    secure: !isDev, // প্রোডাকশনে (HTTPS) true হবে
-    sameSite: isDev ? 'lax' : 'strict', 
-    maxAge: 30 * 24 * 60 * 60 * 1000,
-  });
+  httpOnly: true,
+  secure: !isDev, 
+  sameSite: 'lax', // 'strict' এর বদলে 'lax' দিলে সব ব্রাউজারে ভালো কাজ করবে
+  maxAge: 30 * 24 * 60 * 60 * 1000,
+});
 };
 
 export default generateToken;

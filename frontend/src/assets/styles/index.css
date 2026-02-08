@@ -145,3 +145,102 @@ body {
   font-size: 0.75rem;
   color: #666;
 }
+/* ১. স্ক্রিনের দুই পাশের বাড়তি জায়গা (Padding/Margin) কমানো */
+.container, .container-fluid {
+  padding-left: 5px !important;
+  padding-right: 5px !important;
+}
+
+/* ২. ক্যারোসেল হাইট কমানো */
+.carousel-item {
+  height: 250px !important; /* পিসির জন্য হাইট */
+}
+
+.carousel-item img {
+  height: 100% !important;
+  object-fit: cover;
+}
+
+/* ৩. মোবাইল স্ক্রিনের জন্য বিশেষ সেটিংস */
+@media (max-width: 576px) {
+  .carousel-item {
+    height: 160px !important; /* মোবাইলে আরও ছোট দেখাবে */
+  }
+  
+  /* মেইন সেকশনের প্যাডিং জিরো করা */
+  main {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* প্রোডাক্ট কার্ডের মাঝের গ্যাপ কমানো */
+  .row {
+    margin-left: -4px !important;
+    margin-right: -4px !important;
+  }
+  
+  .col-6 {
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+  }
+}
+/* ১. গ্লোবাল কন্টেইনার স্পেস কমানো (মোবাইলের জন্য) */
+@media (max-width: 576px) {
+  .container, .container-fluid {
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+  }
+
+  /* ২. হেডারের নিচের ফাঁকা জায়গা কমানো */
+  .navbar {
+    min-height: 60px !important;
+  }
+
+  /* ৩. নোটিশ বোর্ড (Marquee) স্পেস ফিক্স */
+  .marquee-box {
+    margin-top: 60px !important; /* হেডারের ঠিক নিচে লাগোয়া থাকবে */
+    padding: 3px 0 !important;
+    font-size: 18px !important; /* মোবাইলে ১৮পিক্সেল যথেষ্ট সুন্দর লাগে */
+  }
+
+  /* ৪. ক্যারোসেল (Carousel) টপ-বটম মার্জিন কমানো */
+  .carousel {
+    margin-top: 5px !important;
+    margin-bottom: 5px !important;
+  }
+  
+  .carousel-item {
+    height: 160px !important; /* হাইট কমিয়ে ছোট করা হলো */
+  }
+
+  /* ৫. প্রোডাক্ট সেকশন এবং গ্রিড স্পেস কমানো */
+  main {
+    padding-top: 0 !important;
+  }
+
+  .row {
+    margin-left: -2px !important;
+    margin-right: -2px !important;
+    margin-top: 0 !important;
+  }
+
+  .col-6 {
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+    margin-bottom: 4px !important; /* প্রোডাক্ট কার্ডগুলোর মাঝে লম্বালম্বি গ্যাপ */
+  }
+
+  /* ৬. প্রোডাক্ট কার্ডের ভেতরের প্যাডিং কমানো */
+  .card {
+    margin: 0 !important;
+    padding: 2px !important;
+  }
+
+  /* ৭. টাইটেল বা সেকশন হেডার (যদি থাকে) */
+  h1, h2, .latest-products-title {
+    margin-top: 10px !important;
+    margin-bottom: 5px !important;
+    font-size: 1.2rem !important;
+    padding-left: 5px !important;
+  }
+}
