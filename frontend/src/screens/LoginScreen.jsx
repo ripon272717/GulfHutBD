@@ -10,7 +10,8 @@ import { setCredentials } from '../slices/authSlice';
 import { toast } from 'react-toastify';
 
 const LoginScreen = () => {
-  const [loginId, setLoginId] = useState(''); // নাম/মোবাইল/ইমেইল এর জন্য
+  // ভেরিয়েবল নাম loginId রাখা হয়েছে যেন ইউজার আইডি/মোবাইল/নাম যাই দিক কাজ করে
+  const [loginId, setLoginId] = useState(''); 
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
@@ -34,7 +35,7 @@ const LoginScreen = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
     try {
-      // Backend এ loginId হিসেবে নাম/মোবাইল/ইমেইল যেটাই যাক, হ্যান্ডেল করবে
+      // Backend যেহেতু 'email' কী (key) খুঁজছে, তাই আমরা loginId-কে email হিসেবে পাঠাচ্ছি
       const res = await login({ email: loginId, password }).unwrap(); 
       dispatch(setCredentials({ ...res }));
       navigate(redirect);
@@ -51,27 +52,27 @@ const LoginScreen = () => {
           
           {/* ইউজার আইডি ফিল্ড */}
           <Form.Group className='mb-3' controlId='loginId'>
-            <Form.Label className='fw-bold'>Name / Mobile / Email</Form.Label>
+            <Form.Label className='fw-bold'>Name / Mobile / Email / ID</Form.Label>
             <InputGroup>
               <InputGroup.Text><FaUserShield /></InputGroup.Text>
-              <Form.Control 
-                type='text' 
-                placeholder='আপনার নাম বা মোবাইল নম্বর দিন' 
-                value={loginId} 
-                onChange={(e) => setLoginId(e.target.value)} 
-                required 
-              />
+              <Form.Control
+                  type='text'
+                  placeholder='নাম, মোবাইল, ইমেইল বা আইডি দিন'
+                  value={loginId} // এখানে আগে 'email' ছিল, যা ভুল ছিল
+                  onChange={(e) => setLoginId(e.target.value)} // এখানে 'setEmail' ছিল, যা ভুল ছিল
+                  required
+              ></Form.Control>
             </InputGroup>
           </Form.Group>
 
-          {/* পাসওয়ার্ড ফিল্ড */}
+          {/* পাসওয়ার্ড ফিল্ড */}
           <Form.Group className='mb-3' controlId='password'>
             <Form.Label className='fw-bold'>Password</Form.Label>
             <InputGroup>
               <InputGroup.Text><FaLock /></InputGroup.Text>
               <Form.Control 
                 type={showPassword ? 'text' : 'password'} 
-                placeholder='পাসওয়ার্ড দিন' 
+                placeholder='পাসওয়ার্ড দিন' 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
                 required 

@@ -1,7 +1,7 @@
 import { apiSlice } from './apiSlice';
-import { USERS_URL } from '../constants';
+import { USERS_URL, UPLOAD_URL } from '../constants';
 
-export const userApiSlice = apiSlice.injectEndpoints({
+export const usersApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation({
       query: (data) => ({
@@ -23,6 +23,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
         method: 'POST',
       }),
     }),
+    // এই মিউটেশন প্রোফাইল পিকচারসহ সব ডাটা আপডেট করবে
     profile: builder.mutation({
       query: (data) => ({
         url: `${USERS_URL}/profile`,
@@ -31,9 +32,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
       }),
     }),
     getUsers: builder.query({
-      query: () => ({
-        url: USERS_URL,
-      }),
+      query: () => ({ url: USERS_URL }),
       providesTags: ['User'],
       keepUnusedDataFor: 5,
     }),
@@ -44,9 +43,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
       }),
     }),
     getUserDetails: builder.query({
-      query: (id) => ({
-        url: `${USERS_URL}/${id}`,
-      }),
+      query: (id) => ({ url: `${USERS_URL}/${id}` }),
       keepUnusedDataFor: 5,
     }),
     updateUser: builder.mutation({
@@ -57,8 +54,6 @@ export const userApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['User'],
     }),
-
-    // --- এখান থেকে নতুন ব্যালেন্স আপডেটের অংশ শুরু ---
     updateUserBalance: builder.mutation({
       query: (data) => ({
         url: `${USERS_URL}/${data.userId}/balance`,
@@ -67,7 +62,14 @@ export const userApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['User'],
     }),
-    // -------------------------------------------
+    // এই মিউটেশনটি ছবি ক্লাউডিনারিতে পাঠাবে
+    uploadUserImage: builder.mutation({
+      query: (data) => ({
+        url: `${UPLOAD_URL}`, 
+        method: 'POST',
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -80,5 +82,6 @@ export const {
   useDeleteUserMutation,
   useUpdateUserMutation,
   useGetUserDetailsQuery,
-  useUpdateUserBalanceMutation, // এই লাইনটি যোগ করতে ভুলবে না
-} = userApiSlice;
+  useUpdateUserBalanceMutation,
+  useUploadUserImageMutation, 
+} = usersApiSlice;
