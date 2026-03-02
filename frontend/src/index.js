@@ -1,7 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import 'bootstrap/dist/css/bootstrap.min.css'; // এটা অবশ্যই সবার আগে দিবি
 import './assets/styles/bootstrap.custom.css';
 import './assets/styles/index.css';
+// যদি Font Awesome বা অন্য কোনো আইকন লাইব্রেরি থাকে, তবে এখানে ইম্পোর্ট কর
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import {

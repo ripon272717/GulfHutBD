@@ -1,5 +1,5 @@
 import { Navbar, Container, Badge, Image, Form, InputGroup, Offcanvas, Button, Modal, Row, Col } from 'react-bootstrap';
-import { FaBars, FaSearch, FaHome, FaSignOutAlt, FaEdit, FaShareAlt, FaUserPlus, FaLink, FaSyncAlt, FaTimes, FaCamera } from 'react-icons/fa'; 
+import { FaBars, FaHome, FaUserPlus, FaLink, FaSyncAlt, FaCamera, FaShareAlt, FaEdit } from 'react-icons/fa'; 
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useState, useRef } from 'react';
@@ -18,13 +18,8 @@ const Header = () => {
   const dispatch = useDispatch();
 
   const [logoutApiCall] = useLogoutMutation();
-  const [updateProfile, { isLoading: loadingUpdate }] = useProfileMutation();
-  const [uploadUserImage, { isLoading: loadingUpload }] = useUploadUserImageMutation();
-
-  const handleCameraClick = (e) => {
-    e.stopPropagation();
-    if (fileInputRef.current) fileInputRef.current.click();
-  };
+  const [updateProfile] = useProfileMutation();
+  const [uploadUserImage, { isLoading: isUploading }] = useUploadUserImageMutation();
 
   const uploadFileHandler = async (e) => {
     const file = e.target.files[0];
@@ -34,21 +29,19 @@ const Header = () => {
     formData.append('image', file);
 
     try {
-      // ১. ছবি ক্লাউডিনারিতে পাঠানো
+      // 1. Image upload to Cloudinary via backend
       const uploadRes = await uploadUserImage(formData).unwrap();
       
-      // ২. প্রাপ্ত URL দিয়ে ইউজারের প্রোফাইল আপডেট
-      const res = await updateProfile({
-        _id: userInfo._id,
-        name: userInfo.name,
-        email: userInfo.email,
-        image: uploadRes.image, 
+      // 2. Update user profile with new image URL
+      const res = await updateProfile({ 
+        _id: userInfo._id, 
+        image: uploadRes.image 
       }).unwrap();
 
-      dispatch(setCredentials({ ...res })); 
-      toast.success('প্রোফাইল ছবি সফলভাবে পরিবর্তন হয়েছে!');
+      dispatch(setCredentials({ ...res }));
+      toast.success('Profile picture updated successfully!');
     } catch (err) {
-      toast.error(err?.data?.message || 'আপলোড ব্যর্থ হয়েছে! সার্ভার রিস্টার্ট দিয়ে দেখো।');
+      toast.error(err?.data?.message || 'Upload failed! Server check koro.');
     }
   };
 
@@ -64,109 +57,111 @@ const Header = () => {
     }
   };
 
-  const renderProfileIcon = (size) => {
-    if (userInfo?.image) {
-      return <Image src={userInfo.image} roundedCircle style={{ width: size, height: size, objectFit: 'cover', border: '2px solid #ffc107' }} />;
-    }
-    return <div style={{ width: size, height: size, borderRadius: '50%', background: '#ffc107', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>{userInfo?.name?.charAt(0)}</div>;
-  };
-
   const inviteLink = userInfo ? `${window.location.origin}/register?invite=${userInfo.customId || userInfo._id}` : '';
 
   return (
     <header className='fixed-top shadow-sm'>
       <style>{`
-        .navbar { background: #212529 !important; min-height: 70px; }
-        .notice-board { background: #ffc107; color: #000; padding: 4px 0; font-weight: bold; text-align: center; border-top: 1px solid #000; }
-        .user-profile-modal .modal-content { border-radius: 20px; border: 3px solid #ffc107; }
-        .profile-pic-box { position: relative; display: inline-block; }
-        .cam-btn { position: absolute; bottom: 5px; right: 5px; background: #212529; color: #ffc107; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; cursor: pointer; }
-        .referral-card { background: #fff9e6; border: 2px dashed #ffc107; border-radius: 12px; padding: 10px; margin-top: 10px; }
+        .navbar { background: #212529 !important; height: 70px; }
+        .user-modal .modal-content { border-radius: 20px; border: 3px solid #ffc107; }
+        .profile-img-box { position: relative; display: inline-block; }
+        .cam-icon { position: absolute; bottom: 5px; right: 5px; background: #212529; color: #ffc107; padding: 8px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; }
+        .notice-board { background: #ffc107; color: #000; padding: 2px 0; font-weight: bold; font-size: 12px; }
       `}</style>
 
       <Navbar variant='dark' className='p-0'>
-        <Container fluid className='d-flex align-items-center justify-content-between px-2'>
+        <Container fluid className='px-2 d-flex justify-content-between align-items-center'>
           <div onClick={() => navigate('/')} style={{cursor:'pointer', textAlign: 'center'}}>
-            <img src={logo} alt='Logo' style={{ width: '38px' }} />
+            <img src={logo} alt='logo' width='38'/>
             <div style={{fontSize: '8px', color: '#ffc107', fontWeight: 'bold'}}>GULF HUT</div>
           </div>
 
           <div className='d-flex align-items-center'>
             {userInfo ? (
-              <div className='d-flex align-items-center' onClick={() => setShowProfileModal(true)} style={{cursor: 'pointer'}}>
-                <div className='text-end me-2'>
-                  <span className='d-block text-white fw-bold' style={{fontSize: '13px'}}>{userInfo.name}</span>
-                  <span className='text-warning fw-bold' style={{fontSize: '11px'}}>QR {userInfo.balance || '0'}</span>
+              <div className='d-flex align-items-center' onClick={() => setShowProfileModal(true)} style={{cursor:'pointer'}}>
+                <div className='text-end me-2 text-white' style={{fontSize:'12px'}}>
+                  <b>{userInfo.name}</b><br/><span className='text-warning'>QR {userInfo.balance || 0}</span>
                 </div>
-                {renderProfileIcon('38px')}
+                <Image src={userInfo.image || logo} roundedCircle width='38' height='38' style={{objectFit:'cover', border: '2px solid #ffc107'}}/>
               </div>
             ) : (
-              <Button variant="warning" size="sm" onClick={() => navigate('/login')}>Login</Button>
+              <Button size='sm' variant='warning' onClick={() => navigate('/login')}>Login</Button>
             )}
             <FaBars className='text-white ms-3' style={{fontSize: '22px', cursor: 'pointer'}} onClick={() => setShowSidebar(true)} />
           </div>
         </Container>
       </Navbar>
 
-      <div className="notice-board"><marquee>স্বাগতম GulfHut এ!</marquee></div>
+      <div className="notice-board"><marquee>Welcome to Gulf Hut! Happy Shopping.</marquee></div>
 
-      <Modal show={showProfileModal} onHide={() => setShowProfileModal(false)} centered className="user-profile-modal">
-        <Modal.Body className="text-center p-4">
-          <button className="btn-close" style={{position:'absolute', right:'15px', top:'15px'}} onClick={() => setShowProfileModal(false)}></button>
-          
-          <div className="profile-pic-box">
-            {renderProfileIcon('100px')}
-            <div className="cam-btn" onClick={handleCameraClick}>
-               {(loadingUpload || loadingUpdate) ? <span className="spinner-border spinner-border-sm"></span> : <FaCamera size={16} />}
+      {/* Profile Modal */}
+      <Modal show={showProfileModal} onHide={() => setShowProfileModal(false)} centered className='user-modal'>
+        <Modal.Body className='text-center p-4'>
+          <div className='profile-img-box'>
+            <Image src={userInfo?.image || logo} roundedCircle width='100' height='100' style={{objectFit:'cover', border: '3px solid #ffc107'}}/>
+            <div className='cam-icon' onClick={() => fileInputRef.current.click()}>
+              {isUploading ? <span className='spinner-border spinner-border-sm'></span> : <FaCamera/>}
             </div>
-            <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={uploadFileHandler} />
+            <input type='file' ref={fileInputRef} hidden accept="image/*" onChange={uploadFileHandler}/>
           </div>
           
-          <h3 className="mt-2 fw-bold text-dark">{userInfo?.name}</h3>
-          <p className="text-primary fw-bold mb-3">User ID: {userInfo?.customId || 'QHBD1001'}</p>
-
-          <Row className="mb-3 g-2">
-            <Col xs={7}>
-              <div className="p-2 bg-light rounded text-start border shadow-sm">
-                <small className="text-muted d-block fw-bold" style={{fontSize: '11px'}}>Current Balance</small>
-                <h4 className="mb-0 text-success fw-bold">QR {userInfo?.balance || '0'}</h4>
+          <h4 className='mt-2 fw-bold'>{userInfo?.name}</h4>
+          <p className='text-primary fw-bold mb-3'>User ID: {userInfo?.customId || 'N/A'}</p>
+          
+          <Row className='g-2 mb-3'>
+            <Col xs={8}>
+              <div className='p-2 bg-light border rounded text-start'>
+                <small className='text-muted d-block' style={{fontSize:'10px'}}>Total Balance</small>
+                <h5 className='mb-0 text-success fw-bold'>QR {userInfo?.balance || 0}</h5>
               </div>
             </Col>
-            <Col xs={5}>
-              <Button variant="info" className="w-100 h-100 fw-bold text-white shadow-sm" onClick={() => window.location.reload()}><FaSyncAlt /></Button>
+            <Col xs={4}>
+              <Button variant='info' className='w-100 h-100 text-white shadow-sm' onClick={() => window.location.reload()}>
+                <FaSyncAlt/>
+              </Button>
             </Col>
           </Row>
 
-          <Button variant="dark" className="w-100 mb-2 d-flex justify-content-between align-items-center py-2 px-3 fw-bold border-0">
-            <span><FaUserPlus className="text-warning me-2"/> Invites</span>
-            <Badge bg="warning" text="dark">{userInfo?.inviteCount || 0}</Badge>
+          <Button variant='dark' className='w-100 mb-2 d-flex justify-content-between align-items-center py-2 px-3'>
+            <span><FaUserPlus className='text-warning me-2'/> Invites</span> 
+            <Badge bg='warning' text='dark'>{userInfo?.inviteCount || 0}</Badge>
+          </Button>
+          
+          <Button variant='dark' className='w-100 mb-2 d-flex justify-content-between align-items-center py-2 px-3'>
+            <span><FaShareAlt className='text-info me-2'/> Shares</span> 
+            <Badge bg='info'>{userInfo?.shareCount || 0}</Badge>
           </Button>
 
-          <Button variant="dark" className="w-100 mb-2 d-flex justify-content-between align-items-center py-2 px-3 fw-bold border-0">
-            <span><FaShareAlt className="text-info me-2"/> Shares</span>
-            <Badge bg="info">{userInfo?.shareCount || 0}</Badge>
-          </Button>
-
-          <div className="referral-card text-start shadow-sm">
-            <small className="fw-bold mb-1 d-block text-muted">Referral Link:</small>
-            <InputGroup size="sm">
+          <div className='mt-3 p-2 rounded bg-light border'>
+            <small className='fw-bold d-block mb-1 text-muted'>Invite Link:</small>
+            <InputGroup size='sm'>
               <Form.Control readOnly value={inviteLink} />
-              <Button variant="warning" onClick={() => {navigator.clipboard.writeText(inviteLink); toast.success('Copied!');}}><FaLink /></Button>
+              <Button variant='warning' onClick={() => {navigator.clipboard.writeText(inviteLink); toast.success('Link Copied!');}}>
+                <FaLink/>
+              </Button>
             </InputGroup>
           </div>
 
-          <div className="d-flex gap-2 border-top pt-3 mt-3">
-            <Button variant="warning" className="w-100 fw-bold" onClick={() => toast.info('Click camera to change photo')}>Update Photo</Button>
-            <Button variant="danger" className="w-100 fw-bold" onClick={logoutHandler}>Logout</Button>
+          <div className='d-flex gap-2 mt-4'>
+            <Button variant='danger' className='w-100 fw-bold' onClick={logoutHandler}>Logout</Button>
           </div>
         </Modal.Body>
       </Modal>
 
+      {/* Sidebar (Offcanvas) */}
       <Offcanvas show={showSidebar} onHide={() => setShowSidebar(false)} placement='end' className='bg-dark text-white'>
-        <Offcanvas.Header closeButton closeVariant='white'><Offcanvas.Title className='text-warning fw-bold'>MENU</Offcanvas.Title></Offcanvas.Header>
+        <Offcanvas.Header closeButton closeVariant='white'>
+          <Offcanvas.Title className='text-warning fw-bold'>GULF HUT MENU</Offcanvas.Title>
+        </Offcanvas.Header>
         <Offcanvas.Body className='p-0'>
-            <div className='p-3 border-bottom' onClick={() => {navigate('/'); setShowSidebar(false);}}><FaHome className='me-2'/> Home</div>
-            <div className='p-3 border-bottom' onClick={() => {navigate('/profile'); setShowSidebar(false);}}><FaEdit className='me-2'/> Edit Profile</div>
+          <div className='p-3 border-bottom' onClick={() => {navigate('/'); setShowSidebar(false)}} style={{cursor:'pointer'}}>
+            <FaHome className='me-2 text-warning'/> Home
+          </div>
+          {userInfo?.isAdmin && (
+            <div className='p-3 border-bottom text-warning fw-bold' onClick={() => {navigate('/admin/userlist'); setShowSidebar(false)}} style={{cursor:'pointer'}}>
+              <FaEdit className='me-2'/> Admin Dashboard
+            </div>
+          )}
         </Offcanvas.Body>
       </Offcanvas>
     </header>

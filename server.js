@@ -1,63 +1,52 @@
 import path from 'path';
 import express from 'express';
 import dotenv from 'dotenv';
-dotenv.config();
-import connectDB from './config/db.js';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import userRoutes from './routes/userRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
-import cors from 'cors';
 
-const port = process.env.PORT || 5000;
-
-// MongoDB কানেক্ট করা
+dotenv.config();
 connectDB();
 
 const app = express();
+const port = process.env.PORT || 5000;
 
-// --- CORS কনফিগারেশন (এই অংশটিই তোর লগআউট সমস্যার সমাধান) ---
+// এই CORS সেটিংসটা তোর লাইভ সাইটের কানেকশন ঠিক করবে
 app.use(cors({
-  origin: [
-    'https://gulfhutbd.vercel.app',  // তোর ভেরসেল ডোমেইন
-    'https://gulfhutbd6.onrender.com', // তোর রেন্ডার ডোমেইন
-    'http://localhost:3000'          // লোকাল হোস্ট
-  ],
+  origin: ['http://localhost:3000', 'https://gulfhutbd.vercel.app'], // তোর Vercel লিংক এখানে যোগ করলাম
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true, // এটি কুকি/টোকেন আদান-প্রদানের জন্য মাস্ট
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// বডি পার্সার মিডলওয়্যার
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// রুটস (Routes)
+// Routes
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/upload', uploadRoutes);
 
-// ইমেজ ফোল্ডার স্ট্যাটিক করা
 const __dirname = path.resolve();
 app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
 
-// প্রোডাকশন মোড চেক
+// প্রোডাকশন মোডে ফ্রন্টএন্ড সার্ভ করার জন্য (যদি লাগে)
 if (process.env.NODE_ENV === 'production') {
-  app.get('/', (req, res) => {
-    res.send('API is running....');
-  });
+  app.use(express.static(path.join(__dirname, '/frontend/build')));
+  app.get('*', (req, res) =>
+    res.sendFile(path.resolve(__dirname, 'frontend', 'build', 'index.html'))
+  );
 } else {
-  app.get('/', (req, res) => {
-    res.send('API is running....');
-  });
+  app.get('/', (req, res) => { res.send('API is running....'); });
 }
 
-// এরর হ্যান্ডলিং মিডলওয়্যার
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(port, () =>
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${port}`)
-);
+app.listen(port, () => console.log(`Server running on port ${port}`));
+console.log('Cloud Name:', process.env.CLOUDINARY_CLOUD_NAME);

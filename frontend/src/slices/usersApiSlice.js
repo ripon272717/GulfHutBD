@@ -23,7 +23,6 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         method: 'POST',
       }),
     }),
-    // এই মিউটেশন প্রোফাইল পিকচারসহ সব ডাটা আপডেট করবে
     profile: builder.mutation({
       query: (data) => ({
         url: `${USERS_URL}/profile`,
@@ -32,7 +31,9 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       }),
     }),
     getUsers: builder.query({
-      query: () => ({ url: USERS_URL }),
+      query: () => ({
+        url: USERS_URL,
+      }),
       providesTags: ['User'],
       keepUnusedDataFor: 5,
     }),
@@ -43,7 +44,9 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       }),
     }),
     getUserDetails: builder.query({
-      query: (id) => ({ url: `${USERS_URL}/${id}` }),
+      query: (id) => ({
+        url: `${USERS_URL}/${id}`,
+      }),
       keepUnusedDataFor: 5,
     }),
     updateUser: builder.mutation({
@@ -62,10 +65,9 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['User'],
     }),
-    // এই মিউটেশনটি ছবি ক্লাউডিনারিতে পাঠাবে
     uploadUserImage: builder.mutation({
       query: (data) => ({
-        url: `${UPLOAD_URL}`, 
+        url: `${UPLOAD_URL}`,
         method: 'POST',
         body: data,
       }),
@@ -80,8 +82,8 @@ export const {
   useProfileMutation,
   useGetUsersQuery,
   useDeleteUserMutation,
-  useUpdateUserMutation,
   useGetUserDetailsQuery,
+  useUpdateUserMutation,
   useUpdateUserBalanceMutation,
-  useUploadUserImageMutation, 
+  useUploadUserImageMutation,
 } = usersApiSlice;
