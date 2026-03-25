@@ -1,6 +1,9 @@
+// Render ড্যাশবোর্ড থেকে তোর মেইন URL টা এখানে দিবি (শেষে যেন / না থাকে)
+const RENDER_BACKEND_URL = 'https://gulfhutbd.onrender.com'; 
+
 export const BASE_URL = process.env.NODE_ENV === 'development' 
   ? 'http://localhost:5000' 
-  : 'https://gulfhutbd.onrender.com'; // Render ড্যাশবোর্ড থেকে পাওয়া তোর লাইভ লিংক
+  : RENDER_BACKEND_URL; 
 
 export const PRODUCTS_URL = '/api/products';
 export const USERS_URL = '/api/users';

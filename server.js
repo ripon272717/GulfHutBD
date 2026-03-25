@@ -30,8 +30,8 @@ const port = process.env.PORT || 5000;
 
 // CORS সেটিংস
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://gulfhutbd.vercel.app'],
-  credentials: true,
+  origin: ['https://gulfhutbd.vercel.app', 'http://localhost:3000'],
+  credentials: true
 }));
 
 // মিডলওয়্যার
