@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Form, Button, Image, Modal } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-// রিয়্যাক্ট আইকনগুলো এখানে ইম্পোর্ট করা হয়েছে
+// লোগো এবং ক্রস সাইনের জন্য রিয়্যাক্ট আইকন
 import { FaTimes, FaFacebook, FaWhatsapp, FaShareAlt } from 'react-icons/fa'; 
 import Loader from '../components/Loader';
 import { setCredentials } from '../slices/authSlice';
@@ -37,9 +37,9 @@ const ProfileScreen = ({ show, onHide }) => {
     try {
       const res = await uploadUserImage(formData).unwrap();
       setImage(res.image); 
-      toast.success('ছবি আপলোড হয়েছে!');
+      toast.success('ছবি আপলোড হয়েছে!');
     } catch (err) {
-      toast.error(err?.data?.message || err.error);
+      toast.error(err?.data?.message || err.error || 'ইমেজ আপলোড ফেইল্ড');
     }
   };
 
@@ -48,7 +48,7 @@ const ProfileScreen = ({ show, onHide }) => {
     try {
       const res = await updateProfile({ _id: userInfo._id, name, email, image }).unwrap();
       dispatch(setCredentials({ ...res }));
-      toast.success('প্রোফাইল আপডেট হয়েছে!');
+      toast.success('প্রোফাইল আপডেট হয়েছে!');
       onHide(); 
     } catch (err) {
       toast.error(err?.data?.message || err.error);
@@ -57,71 +57,85 @@ const ProfileScreen = ({ show, onHide }) => {
 
   return (
     <Modal show={show} onHide={onHide} centered>
-      <div style={{ position: 'relative', padding: '20px', backgroundColor: '#fff', borderRadius: '10px' }}>
-        
-        {/* --- ম্যানুয়াল ক্রস বাটন (অবশ্যই দেখা যাবে) --- */}
+      <Modal.Header>
+        <Modal.Title className='fw-bold text-warning'>
+          User ID: {userInfo?.userId || 'QHB1006'}
+        </Modal.Title>
+        {/* --- ম্যানুয়াল ক্রস বাটন (X) --- */}
         <div 
           onClick={onHide} 
-          style={{
-            position: 'absolute',
-            top: '15px',
-            right: '15px',
-            cursor: 'pointer',
-            fontSize: '1.5rem',
-            color: '#000',
-            zIndex: 100
+          style={{ 
+            cursor: 'pointer', 
+            fontSize: '1.5rem', 
+            marginLeft: 'auto', 
+            color: '#333',
+            padding: '5px' 
           }}
         >
           <FaTimes /> 
         </div>
-
-        <h2 className='text-center mb-4' style={{ fontWeight: 'bold' }}>My Profile</h2>
-        
-        <div className='text-center mb-4'>
+      </Modal.Header>
+      
+      <Modal.Body className='text-center'>
+        <div className='position-relative d-inline-block mb-4'>
           <Image 
             src={image || userInfo?.image || 'https://via.placeholder.com/150'} 
             roundedCircle 
-            style={{ width: '110px', height: '110px', objectFit: 'cover', border: '3px solid #ffc107' }} 
+            style={{ width: '120px', height: '120px', objectFit: 'cover', border: '3px solid #ffc107' }} 
           />
+          <label 
+            htmlFor='image-upload' 
+            className='position-absolute bottom-0 end-0 bg-warning p-2 rounded-circle' 
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+             📸
+             <input type='file' id='image-upload' hidden onChange={uploadFileHandler} />
+          </label>
         </div>
 
+        {loadingUpload && <Loader />}
+
         <Form onSubmit={submitHandler}>
-          <Form.Group className='mb-3' controlId='image'>
-            <Form.Label className='fw-bold'>Change Picture</Form.Label>
-            <Form.Control type='file' onChange={uploadFileHandler} />
-            {loadingUpload && <Loader />}
+          <Form.Group className='mb-3 text-start' controlId='name'>
+            <Form.Label className='fw-bold small text-muted'>Full Name</Form.Label>
+            <Form.Control 
+              type='text' 
+              placeholder='Enter name' 
+              value={name} 
+              onChange={(e) => setName(e.target.value)} 
+            />
           </Form.Group>
 
-          <Form.Group className='mb-3' controlId='name'>
-            <Form.Label className='fw-bold'>Name</Form.Label>
-            <Form.Control type='text' value={name} onChange={(e) => setName(e.target.value)} />
+          <Form.Group className='mb-3 text-start' controlId='email'>
+            <Form.Label className='fw-bold small text-muted'>Email Address</Form.Label>
+            <Form.Control 
+              type='email' 
+              placeholder='Enter email' 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+            />
           </Form.Group>
 
-          <Form.Group className='mb-3' controlId='mobile'>
-            <Form.Label className='fw-bold'>Mobile (Fixed)</Form.Label>
-            <Form.Control type='text' value={mobile} disabled style={{ backgroundColor: '#f8f9fa' }} />
-          </Form.Group>
-
-          <Form.Group className='mb-4' controlId='email'>
-            <Form.Label className='fw-bold'>Email</Form.Label>
-            <Form.Control type='email' value={email} onChange={(e) => setEmail(e.target.value)} />
-          </Form.Group>
-
-          <Button type='submit' variant='warning' className='w-100 fw-bold py-2 shadow-sm'>
-            Update Profile
+          <Button 
+            type='submit' 
+            variant='warning' 
+            className='w-100 fw-bold py-2 shadow-sm'
+            disabled={loadingUpdateProfile}
+          >
+            {loadingUpdateProfile ? 'Saving...' : 'Update Profile'}
           </Button>
 
-          {/* --- সোশ্যাল মিডিয়া লোগো সেকশন --- */}
-          <div className='mt-4 text-center'>
-             <p className='text-muted small mb-2'>Share or Follow</p>
-             <div className='d-flex justify-content-center gap-4' style={{ fontSize: '1.6rem' }}>
-                <FaFacebook style={{ color: '#1877F2', cursor: 'pointer' }} />
-                <FaWhatsapp style={{ color: '#25D366', cursor: 'pointer' }} />
-                <FaShareAlt style={{ color: '#6c757d', cursor: 'pointer' }} />
+          {/* --- সোশ্যাল মিডিয়া লোগো সেকশন --- */}
+          <div className='mt-4 pt-3 border-top'>
+             <p className='text-muted small mb-3'>Invite or Share Profile</p>
+             <div className='d-flex justify-content-center gap-4' style={{ fontSize: '1.8rem' }}>
+                <FaFacebook style={{ color: '#1877F2', cursor: 'pointer' }} title="Facebook" />
+                <FaWhatsapp style={{ color: '#25D366', cursor: 'pointer' }} title="WhatsApp" />
+                <FaShareAlt style={{ color: '#6c757d', cursor: 'pointer' }} title="Share" />
              </div>
           </div>
         </Form>
-      </div>
+      </Modal.Body>
     </Modal>
   );
 };

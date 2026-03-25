@@ -1,31 +1,41 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-node_modules
+# Dependency folders (এগুলো গিটহাবে যাবে না)
+node_modules/
 /node_modules
 /.pnp
 .pnp.js
 
-# testing
-/coverage
-
-# production
-/build
-
-# misc
-.DS_Store
+# Environment variables (তোর পাসওয়ার্ড ও সিক্রেট কি থাকে এখানে, তাই এটা একদম নিষিদ্ধ)
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
+# Testing (টেস্ট রিপোর্টগুলো ইগনোর করা হবে)
+/coverage
+
+# Production Build (React এর বিল্ড ফোল্ডার)
+/build
+/frontend/build
+/dist
+
+# User Uploads (লোকাল আপলোড করা ছবিগুলো যেন গিটহাবে না যায়)
+uploads/
+/uploads/
+uploads/*
+frontend/public/uploads
+
+# OS specific files (অপারেটিং সিস্টেমের অটোমেটিক ফাইল)
+.DS_Store
+Thumbs.db
+
+# Logs (এরর ও ডিব্যাগ লগ)
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-frontend/build
-uploads/*png
-uploads/*jpg
+.eslintcache
 
-# API tests
+# API tests & editors
 http
+.vscode/
+.idea/
