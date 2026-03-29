@@ -9,11 +9,11 @@ const generateToken = (res, userId) => {
   const isDev = process.env.NODE_ENV !== 'production';
 
   res.cookie('jwt', token, {
-    httpOnly: true,
-    secure: !isDev, 
-    sameSite: isDev ? 'lax' : 'none', 
-    maxAge: 30 * 24 * 60 * 60 * 1000,
-  });
+  httpOnly: true,
+  secure: true, // প্রোডাকশনে এটি true হতে হবে
+  sameSite: 'None', // ক্রস-সাইট কুকি শেয়ার করার জন্য এটি মাস্ট
+  maxAge: 30 * 24 * 60 * 60 * 1000,
+});
 };
 
 export default generateToken;
