@@ -1,11 +1,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { BASE_URL } from '../constants';
 
+
+
 const baseQuery = fetchBaseQuery({ 
   baseUrl: BASE_URL,
-  // ব্রাউজার থেকে কুকি (Token) পাঠানোর জন্য নিচের এই লাইনটি বাধ্যতামূলক
-  credentials: 'include', 
   prepareHeaders: (headers) => {
+    // এখানে তোর টোকেন সেট করা আছে কি না চেক কর
     return headers;
   },
 });
