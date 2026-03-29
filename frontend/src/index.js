@@ -1,11 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import 'bootstrap/dist/css/bootstrap.min.css'; // এটা অবশ্যই সবার আগে দিবি
-import './assets/styles/bootstrap.custom.css';
-import './assets/styles/index.css';
-// যদি Font Awesome বা অন্য কোনো আইকন লাইব্রেরি থাকে, তবে এখানে ইম্পোর্ট কর
-import App from './App';
-import reportWebVitals from './reportWebVitals';
 import {
   createBrowserRouter,
   createRoutesFromElements,
@@ -13,6 +7,19 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import { Provider } from 'react-redux';
+import { PayPalScriptProvider } from '@paypal/react-paypal-js';
+import axios from 'axios';
+
+// Styles
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './assets/styles/bootstrap.custom.css';
+import './assets/styles/index.css';
+
+// Components & Screens
+import App from './App';
+import reportWebVitals from './reportWebVitals';
+import store from './store';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
 import HomeScreen from './screens/HomeScreen';
@@ -25,20 +32,22 @@ import PaymentScreen from './screens/PaymentScreen';
 import PlaceOrderScreen from './screens/PlaceOrderScreen';
 import OrderScreen from './screens/OrderScreen';
 import ProfileScreen from './screens/ProfileScreen';
+
+// Admin Screens
 import OrderListScreen from './screens/admin/OrderListScreen';
 import ProductListScreen from './screens/admin/ProductListScreen';
 import ProductEditScreen from './screens/admin/ProductEditScreen';
 import UserListScreen from './screens/admin/UserListScreen';
 import UserEditScreen from './screens/admin/UserEditScreen';
-// নতুন স্ক্রিনটি এখানে ইম্পোর্ট করা হয়েছে
 import UserBalanceEditScreen from './screens/admin/UserBalanceEditScreen'; 
-import store from './store';
-import { Provider } from 'react-redux';
-import { PayPalScriptProvider } from '@paypal/react-paypal-js';
+
+// Axios Configuration for Cookies
+axios.defaults.withCredentials = true;
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path='/' element={<App />}>
+      {/* Public Routes */}
       <Route index={true} path='/' element={<HomeScreen />} />
       <Route path='/search/:keyword' element={<HomeScreen />} />
       <Route path='/page/:pageNumber' element={<HomeScreen />} />
@@ -51,7 +60,7 @@ const router = createBrowserRouter(
       <Route path='/login' element={<LoginScreen />} />
       <Route path='/register' element={<RegisterScreen />} />
       
-      {/* Registered users */}
+      {/* Private Routes (Registered users) */}
       <Route path='' element={<PrivateRoute />}>
         <Route path='/shipping' element={<ShippingScreen />} />
         <Route path='/payment' element={<PaymentScreen />} />
@@ -60,7 +69,7 @@ const router = createBrowserRouter(
         <Route path='/profile' element={<ProfileScreen />} />
       </Route>
 
-      {/* Admin users */}
+      {/* Admin Routes */}
       <Route path='' element={<AdminRoute />}>
         <Route path='/admin/orderlist' element={<OrderListScreen />} />
         <Route path='/admin/productlist' element={<ProductListScreen />} />
@@ -72,7 +81,7 @@ const router = createBrowserRouter(
         <Route path='/admin/product/:id/edit' element={<ProductEditScreen />} />
         <Route path='/admin/user/:id/edit' element={<UserEditScreen />} />
         
-        {/* ব্যালেন্স এডিট করার জন্য এই নতুন রাউটটি যোগ করা হলো */}
+        {/* ব্যালেন্স এডিট করার নতুন রাউট */}
         <Route path='/admin/user/:id/balance' element={<UserBalanceEditScreen />} />
       </Route>
     </Route>

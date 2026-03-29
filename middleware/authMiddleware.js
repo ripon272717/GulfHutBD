@@ -6,24 +6,31 @@ import User from '../models/userModel.js';
 const protect = asyncHandler(async (req, res, next) => {
   let token;
 
-  // Read JWT from the 'jwt' cookie
+  // ব্রাউজারের কুকি থেকে 'jwt' টোকেনটি রিড করা
   token = req.cookies.jwt;
+
+  // চেক করার জন্য কনসোলে প্রিন্ট (ডেভেলপমেন্ট মোডে কাজে দেবে)
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Token checking in middleware:', token ? 'Found' : 'Not Found');
+  }
 
   if (token) {
     try {
+      // টোকেন ভেরিফাই করা
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+      // ইউজারের ডাটা ডাটাবেস থেকে নিয়ে আসা (পাসওয়ার্ড ছাড়া)
       req.user = await User.findById(decoded.userId).select('-password');
 
       next();
     } catch (error) {
-      console.error(error);
+      console.error('JWT Verification Error:', error.message);
       res.status(401);
-      throw new Error('Not authorized, token failed');
+      throw new Error('অনুমোদিত নয়, টোকেন কাজ করছে না');
     }
   } else {
     res.status(401);
-    throw new Error('Not authorized, no token');
+    throw new Error('অনুমোদিত নয়, কোনো টোকেন পাওয়া যায়নি');
   }
 });
 
@@ -33,7 +40,7 @@ const admin = (req, res, next) => {
     next();
   } else {
     res.status(401);
-    throw new Error('Not authorized as an admin');
+    throw new Error('অ্যাডমিন হিসেবে আপনার অনুমতি নেই');
   }
 };
 

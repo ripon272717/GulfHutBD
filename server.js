@@ -3,7 +3,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import { v2 as cloudinary } from 'cloudinary'; // ক্লাউডিনারি ইমপোর্ট
+import { v2 as cloudinary } from 'cloudinary';
 import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
@@ -12,13 +12,13 @@ import userRoutes from './routes/userRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 
-// এনভায়রনমেন্ট ভ্যারিয়েবল লোড করা (সবার আগে)
+// ১. এনভায়রনমেন্ট ভ্যারিয়েবল লোড করা
 dotenv.config();
 
-// ডাটাবেস কানেকশন
+// ২. ডাটাবেস কানেকশন
 connectDB();
 
-// ক্লাউডিনারি কনফিগারেশন
+// ৩. ক্লাউডিনারি কনফিগারেশন
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -28,35 +28,28 @@ cloudinary.config({
 const app = express();
 const port = process.env.PORT || 5000;
 
-// CORS সেটিংস
-app.use(cors({
-  origin: ['https://gulfhutbd.vercel.app', 'http://localhost:3000'],
-  credentials: true,
-}));
+// ৪. CORS সেটিংস (এটি সবার উপরে থাকা জরুরি)
+app.use(
+  cors({
+    origin: ['http://localhost:3000', 'https://gulfhutbd.vercel.app'],
+    credentials: true, // এটি অবশ্যই true হতে হবে যেন টোকেন/কুকি আদান-প্রদান করতে পারে
+  })
+);
 
-
-res.cookie('jwt', token, {
-  httpOnly: true,
-  secure: true, // প্রোডাকশনে অবশ্যই true হতে হবে
-  sameSite: 'None', // ক্রস-সাইট কুকির জন্য এটি বাধ্যতামূলক
-  maxAge: 30 * 24 * 60 * 60 * 1000,
-});
-
-// মিডলওয়্যার
+// ৫. মিডলওয়্যার (অর্ডার অনুযায়ী সাজানো)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(cookieParser()); // কুকি রিড করার জন্য এটি রুটস এর উপরে থাকতে হবে
 
-// এপিআই রুটস
+// ৬. এপিআই রুটস
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/upload', uploadRoutes);
 
-// স্ট্যাটিক ফোল্ডার সেটআপ
+// ৭. স্ট্যাটিক ফোল্ডার এবং প্রোডাকশন সেটআপ
 const __dirname = path.resolve();
 app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
 
-// প্রোডাকশন মোড হ্যান্ডেলিং
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '/frontend/build')));
   app.get('*', (req, res) =>
@@ -68,12 +61,11 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// এরর হ্যান্ডলিং মিডলওয়্যার
+// ৮. এরর হ্যান্ডলিং মিডলওয়্যার (সবার নিচে)
 app.use(notFound);
 app.use(errorHandler);
 
 app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-    // চেক করার জন্য ক্লাউড নেম কনসোলে দেখানো হলো
-    console.log('Cloudinary Configured:', process.env.CLOUDINARY_CLOUD_NAME);
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${port}`);
+  console.log('Cloudinary Configured:', process.env.CLOUDINARY_CLOUD_NAME);
 });
