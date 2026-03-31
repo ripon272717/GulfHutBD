@@ -32,6 +32,25 @@ const Header = () => {
 
   const isAdmin = userInfo && (userInfo.role === 'admin' || userInfo.role === 'superadmin');
 
+  // --- ডাটা অটো-সিঙ্ক লজিক (রোল বা ব্যালেন্স চেঞ্জ হলে যেন সাথে সাথে আপডেট হয়) ---
+  const fetchLatestProfile = async () => {
+    if (!userInfo) return;
+    try {
+      // শুধু আইডি পাঠিয়ে প্রোফাইল কল দিলে ডাটাবেস থেকে লেটেস্ট ডাটা আসবে
+      const res = await updateProfile({ _id: userInfo._id }).unwrap(); 
+      dispatch(setCredentials({ ...res }));
+    } catch (err) {
+      console.error('Auto-sync failed');
+    }
+  };
+
+  // যখনই মডাল ওপেন হবে, তখনই ডাটাবেস থেকে লেটেস্ট ডাটা টেনে আনবে
+  useEffect(() => {
+    if (showProfileModal) {
+      fetchLatestProfile();
+    }
+  }, [showProfileModal]);
+
   useEffect(() => {
     if (userInfo) {
       setName(userInfo.name);
@@ -104,9 +123,9 @@ const Header = () => {
         .search-btn { border-radius: 0 20px 20px 0 !important; background: #ffc107 !important; color: #000 !important; border: none; height: 35px; }
         .user-name-box { max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white; font-size: 13px; font-weight: bold; line-height: 1.1; }
         .role-badge { font-size: 10px; padding: 2px 10px; border-radius: 12px; margin-top: 5px; display: inline-block; font-weight: bold; text-transform: uppercase; }
-        .bg-superadmin { background: #dc3545; color: white; }
-        .bg-admin { background: #fd7e14; color: white; }
-        .bg-user { background: #198754; color: white; }
+        .bg-superadmin { background: #dc3545 !important; color: white; }
+        .bg-admin { background: #fd7e14 !important; color: white; }
+        .bg-user { background: #198754 !important; color: white; }
         .edit-input { background: #fff !important; border: 1px solid #ddd !important; border-radius: 8px !important; font-size: 14px; margin-bottom: 10px; }
         .offcanvas { background: #212529 !important; color: white !important; }
         .offcanvas-link { color: white !important; text-decoration: none; padding: 15px 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #333; transition: 0.3s; }
@@ -116,7 +135,7 @@ const Header = () => {
 
       <Navbar variant='dark'>
         <Container fluid className='px-2 d-flex align-items-center'>
-          {/* Mobile Bars */}
+          {/* Mobile Bars Button */}
           <FaBars className='text-white me-2 d-lg-none' style={{fontSize: '22px', cursor: 'pointer'}} onClick={() => setShowSidebar(true)} />
           
           {/* Logo */}
@@ -142,7 +161,7 @@ const Header = () => {
             </InputGroup>
           </div>
 
-          {/* User Profile & Balance */}
+          {/* User Profile & Balance Area */}
           <div className='d-flex align-items-center ms-2'>
             <div className='pc-only me-3 position-relative' style={{color:'white', cursor:'pointer'}} onClick={() => navigate('/cart')}>
                <FaShoppingCart size={22}/>
@@ -158,7 +177,7 @@ const Header = () => {
                 <Image src={userInfo.image || logo} roundedCircle width='38' height='38' style={{border: '2px solid #ffc107', objectFit:'cover'}} />
               </div>
             ) : (
-              <Button size='sm' variant='warning' className='rounded-pill px-3' onClick={() => navigate('/login')}>Login</Button>
+              <Button size='sm' variant='warning' className='rounded-pill px-3 fw-bold' onClick={() => navigate('/login')}>Login</Button>
             )}
           </div>
         </Container>
@@ -209,7 +228,7 @@ const Header = () => {
               <small className='opacity-75'>Total Balance</small>
               <h4 className='text-warning fw-bold mb-0'>QR {userInfo?.balance || 0}</h4>
             </div>
-            <Button variant='outline-warning' size='sm' className='rounded-pill' onClick={() => window.location.reload()}><FaSyncAlt/> Sync</Button>
+            <Button variant='outline-warning' size='sm' className='rounded-pill' onClick={fetchLatestProfile}><FaSyncAlt/> Sync</Button>
           </div>
 
           <Row className='g-2 mb-3'>
@@ -240,6 +259,8 @@ const Header = () => {
               <Form.Control className='edit-input shadow-none' value={email} onChange={(e) => setEmail(e.target.value)} />
               <small className='fw-bold text-muted'>New Password</small>
               <Form.Control className='edit-input shadow-none' type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <small className='fw-bold text-muted'>Confirm Password</small>
+              <Form.Control className='edit-input shadow-none' type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
             </Form>
           )}
 
