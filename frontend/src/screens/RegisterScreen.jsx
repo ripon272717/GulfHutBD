@@ -5,7 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useRegisterMutation } from '../slices/usersApiSlice';
 import { setCredentials } from '../slices/authSlice';
 import { toast } from 'react-toastify';
-import { FaEye, FaEyeSlash } from 'react-icons/fa'; // আইকন ইম্পোর্ট
+import { FaEye, FaEyeSlash } from 'react-icons/fa'; 
 import Loader from '../components/Loader';
 
 const RegisterScreen = () => {
@@ -13,7 +13,7 @@ const RegisterScreen = () => {
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // পাসওয়ার্ড দেখানোর স্টেট
+  const [showPassword, setShowPassword] = useState(false); 
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -26,6 +26,13 @@ const RegisterScreen = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
+
+    // ইউজারনেম ভ্যালিডেশন: সর্বনিম্ন ৪ এবং সর্বোচ্চ ৮ ক্যারেক্টার
+    if (name.length < 4 || name.length > 8) {
+      toast.error('User Name must be between 4 and 8 characters');
+      return;
+    }
+
     try {
       const res = await register({ 
         name, 
@@ -48,16 +55,20 @@ const RegisterScreen = () => {
         <h2 className='text-center mb-4 fw-bold' style={{ color: '#212529' }}>Sign Up</h2>
         
         <Form onSubmit={submitHandler}>
-          {/* নাম / ইউজারনেম */}
+          {/* এডিট করা ইউজারনেম সেকশন */}
           <Form.Group className='mb-3' controlId='name'>
-            <Form.Label className='fw-bold'>Name / Username</Form.Label>
+            <Form.Label className='fw-bold'>Enter Your User Name</Form.Label>
             <Form.Control
               type='text'
-              placeholder='Enter your name'
+              placeholder='User Name (4-6 chars)'
               required
               value={name}
+              maxLength={6} // ব্রাউজারে ৮ এর বেশি টাইপ করা আটকাবে
               onChange={(e) => setName(e.target.value)}
             />
+            <Form.Text className="text-muted">
+              Username must be 4 to 6 characters long.
+            </Form.Text>
           </Form.Group>
 
           {/* মোবাইল নম্বর */}
@@ -83,7 +94,7 @@ const RegisterScreen = () => {
             />
           </Form.Group>
 
-          {/* পাসওয়ার্ড সাথে আইকন */}
+          {/* পাসওয়ার্ড সাথে আইকন */}
           <Form.Group className='mb-4' controlId='password'>
             <Form.Label className='fw-bold'>Password</Form.Label>
             <InputGroup>
