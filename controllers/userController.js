@@ -34,10 +34,10 @@ export const authUser = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Register a new user
+// @desc    Register a new user (৬ ডিজিট ইউনিক আইডি লজিকসহ)
 // @route   POST /api/users
 export const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, mobile, password } = req.body;
+  const { name, email, mobile, password, referredBy } = req.body;
 
   const userExists = await User.findOne({ mobile });
 
@@ -46,13 +46,52 @@ export const registerUser = asyncHandler(async (req, res) => {
     throw new Error('এই মোবাইল নম্বর দিয়ে অলরেডি অ্যাকাউন্ট আছে');
   }
 
-  const user = await User.create({
-    name,
-    mobile,
-    password,
-    email: email && email.trim() !== '' ? email.toLowerCase() : undefined,
-  });
+  // --- ইউনিক কাস্টম আইডি জেনারেশন লজিক শুরু ---
+  let isUnique = false;
+  let digitsToTake = 6; 
+  let customId = "";
 
+  while (!isUnique) {
+    // মোবাইলের শেষ অংশ নেওয়া (শুরুতে ৬ ডিজিট)
+    let mobileSuffix = mobile.slice(-digitsToTake);
+    customId = `QHBD${mobileSuffix}`;
+
+    // ডাটাবেসে চেক করা এই আইডি আগে কেউ নিয়েছে কি না
+    const idExists = await User.findOne({ customId });
+
+    if (idExists) {
+      // যদি মিলে যায়, তবে ডিজিট বাড়িয়ে ৭ করবে, তারপর ৮...
+      digitsToTake++;
+      
+      // সেফটি: যদি মোবাইল নম্বরের সব ডিজিট শেষ হয়ে যায় তবে র‍্যান্ডম সংখ্যা যোগ করবে
+      if (digitsToTake > mobile.length) {
+        customId = `QHBD${mobile.slice(-6)}${Math.floor(Math.random() * 10)}`;
+        // র‍্যান্ডম দেওয়ার পর সে সরাসরি ইউনিক ধরে নেবে অথবা লুপ আবার চেক করবে
+      }
+    } else {
+      // যদি এই আইডি ডাটাবেসে না থাকে, তবে এটি ইউনিক
+      isUnique = true; 
+    }
+  }
+  // --- ইউনিক কাস্টম আইডি জেনারেশন লজিক শেষ ---
+
+  // রেফারেল কোড জেনারেশন (নামের প্রথম ৩ অক্ষর + মোবাইলের শেষ ৪ ডিজিট)
+  // ... (রেজিস্ট্রেশন ফাংশনের ভেতর যেখানে রেফারেল কোড জেনারেট হচ্ছে)
+
+// নামের প্রথম ৩ অক্ষর + মোবাইলের শেষ ৪ ডিজিট + ২ ডিজিটের র‍্যান্ডম নম্বর
+const cleanName = name.replace(/\s/g, '').toUpperCase();
+const randomSuffix = Math.floor(Math.random() * 90) + 10; // এটি ডুপ্লিকেট হওয়া আটকাবে
+const referralCode = `${cleanName.substring(0, 3)}${mobile.slice(-4)}${randomSuffix}`;
+
+const user = await User.create({
+  name,
+  mobile,
+  password,
+  customId, // আমাদের জেনারেট করা ইউনিক আইডি
+  referralCode, // এখন এটি ইউনিক হবেই
+  referredBy: referredBy || null,
+  email: email && email.trim() !== '' ? email.toLowerCase() : undefined,
+});
   if (user) {
     generateToken(res, user._id);
     res.status(201).json({
@@ -72,12 +111,11 @@ export const registerUser = asyncHandler(async (req, res) => {
 
 // @desc    Logout user / clear cookie
 // @route   POST /api/users/logout
-
 export const logoutUser = (req, res) => {
   res.cookie('jwt', '', {
     httpOnly: true,
     expires: new Date(0),
-    secure: process.env.NODE_ENV !== 'development', // এখানেও secure true হতে হবে
+    secure: process.env.NODE_ENV !== 'development',
     sameSite: process.env.NODE_ENV !== 'development' ? 'none' : 'lax',
   });
   res.status(200).json({ message: 'Logged out successfully' });
@@ -104,7 +142,7 @@ export const getUserProfile = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Update profile (ইমেজ ফিক্সসহ)
+// @desc    Update profile
 // @route   PUT /api/users/profile
 export const updateUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
@@ -121,7 +159,6 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
       user.password = req.body.password;
     }
 
-    // ইমেজ আপলোড হলে ক্লাউডিনারি ইউআরএল এখানে সেভ হবে
     if (req.body.image) {
       user.image = req.body.image;
     }
@@ -183,7 +220,6 @@ export const updateUser = asyncHandler(async (req, res) => {
     user.mobile = req.body.mobile || user.mobile;
     user.isAdmin = Boolean(req.body.isAdmin);
     
-    // অ্যাডমিন প্যানেল থেকেও ইমেজ আপডেট করার অপশন থাকলে:
     if (req.body.image) {
         user.image = req.body.image;
     }

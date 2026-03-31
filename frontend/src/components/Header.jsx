@@ -7,6 +7,7 @@ import { useLogoutMutation, useProfileMutation, useUploadUserImageMutation } fro
 import { logout, setCredentials } from '../slices/authSlice';
 import logo from '../assets/gulflogo.png';
 import { toast } from 'react-toastify';
+import { FaTimes } from 'react-icons/fa'; // ক্রস আইকনের জন্য
 
 const Header = () => {
   const [showSidebar, setShowSidebar] = useState(false);
@@ -29,10 +30,7 @@ const Header = () => {
     formData.append('image', file);
 
     try {
-      // 1. Image upload to Cloudinary via backend
       const uploadRes = await uploadUserImage(formData).unwrap();
-      
-      // 2. Update user profile with new image URL
       const res = await updateProfile({ 
         _id: userInfo._id, 
         image: uploadRes.image 
@@ -63,10 +61,28 @@ const Header = () => {
     <header className='fixed-top shadow-sm'>
       <style>{`
         .navbar { background: #212529 !important; height: 70px; }
-        .user-modal .modal-content { border-radius: 20px; border: 3px solid #ffc107; }
+        .user-modal .modal-content { border-radius: 20px; border: 3px solid #ffc107; position: relative; }
         .profile-img-box { position: relative; display: inline-block; }
         .cam-icon { position: absolute; bottom: 5px; right: 5px; background: #212529; color: #ffc107; padding: 8px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; }
         .notice-board { background: #ffc107; color: #000; padding: 2px 0; font-weight: bold; font-size: 12px; }
+        .close-btn-custom { 
+          position: absolute; 
+          right: 15px; 
+          top: 15px; 
+          background: #eee; 
+          border: none; 
+          font-size: 1.2rem; 
+          cursor: pointer; 
+          z-index: 100; 
+          border-radius: 50%; 
+          width: 30px; 
+          height: 30px; 
+          display: flex; 
+          align-items: center; 
+          justify-content: center;
+          transition: 0.3s;
+        }
+        .close-btn-custom:hover { background: #ffc107; color: #000; }
       `}</style>
 
       <Navbar variant='dark' className='p-0'>
@@ -96,7 +112,17 @@ const Header = () => {
 
       {/* Profile Modal */}
       <Modal show={showProfileModal} onHide={() => setShowProfileModal(false)} centered className='user-modal'>
-        <Modal.Body className='text-center p-4'>
+        <Modal.Body className='text-center p-4 position-relative'>
+          
+          {/* ক্রস বাটন - এখানে ফাংশন ঠিক করা হয়েছে */}
+          <button 
+            type="button" 
+            className="close-btn-custom" 
+            onClick={() => setShowProfileModal(false)}
+          >
+            <FaTimes />
+          </button>
+
           <div className='profile-img-box'>
             <Image src={userInfo?.image || logo} roundedCircle width='100' height='100' style={{objectFit:'cover', border: '3px solid #ffc107'}}/>
             <div className='cam-icon' onClick={() => fileInputRef.current.click()}>
