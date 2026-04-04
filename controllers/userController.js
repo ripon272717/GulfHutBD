@@ -9,9 +9,9 @@ export const authUser = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({
     $or: [
-      { mobile: email },                                
-      { customId: email },                              
-      { name: email },                                  
+      { mobile: email },                                 
+      { customId: email },                               
+      { name: email },                                   
       { email: email ? email.toLowerCase() : '____' }   
     ],
   });
@@ -25,8 +25,12 @@ export const authUser = asyncHandler(async (req, res) => {
       email: user.email,
       mobile: user.mobile,
       customId: user.customId,
-      isAdmin: user.isAdmin,
       image: user.image,
+      // রোল এবং ব্যালেন্স অ্যাড করা হলো সিঙ্ক হওয়ার জন্য
+      role: user.role,
+      walletBalance: user.walletBalance,
+      isAdmin: user.isAdmin,
+      isSuperAdmin: user.isSuperAdmin,
     });
   } else {
     res.status(401);
@@ -52,46 +56,37 @@ export const registerUser = asyncHandler(async (req, res) => {
   let customId = "";
 
   while (!isUnique) {
-    // মোবাইলের শেষ অংশ নেওয়া (শুরুতে ৬ ডিজিট)
     let mobileSuffix = mobile.slice(-digitsToTake);
     customId = `QHBD${mobileSuffix}`;
 
-    // ডাটাবেসে চেক করা এই আইডি আগে কেউ নিয়েছে কি না
     const idExists = await User.findOne({ customId });
 
     if (idExists) {
-      // যদি মিলে যায়, তবে ডিজিট বাড়িয়ে ৭ করবে, তারপর ৮...
       digitsToTake++;
-      
-      // সেফটি: যদি মোবাইল নম্বরের সব ডিজিট শেষ হয়ে যায় তবে র‍্যান্ডম সংখ্যা যোগ করবে
       if (digitsToTake > mobile.length) {
         customId = `QHBD${mobile.slice(-6)}${Math.floor(Math.random() * 10)}`;
-        // র‍্যান্ডম দেওয়ার পর সে সরাসরি ইউনিক ধরে নেবে অথবা লুপ আবার চেক করবে
       }
     } else {
-      // যদি এই আইডি ডাটাবেসে না থাকে, তবে এটি ইউনিক
       isUnique = true; 
     }
   }
   // --- ইউনিক কাস্টম আইডি জেনারেশন লজিক শেষ ---
 
-  // রেফারেল কোড জেনারেশন (নামের প্রথম ৩ অক্ষর + মোবাইলের শেষ ৪ ডিজিট)
-  // ... (রেজিস্ট্রেশন ফাংশনের ভেতর যেখানে রেফারেল কোড জেনারেট হচ্ছে)
+  const cleanName = name.replace(/\s/g, '').toUpperCase();
+  const randomSuffix = Math.floor(Math.random() * 90) + 10; 
+  const referralCode = `${cleanName.substring(0, 3)}${mobile.slice(-4)}${randomSuffix}`;
 
-// নামের প্রথম ৩ অক্ষর + মোবাইলের শেষ ৪ ডিজিট + ২ ডিজিটের র‍্যান্ডম নম্বর
-const cleanName = name.replace(/\s/g, '').toUpperCase();
-const randomSuffix = Math.floor(Math.random() * 90) + 10; // এটি ডুপ্লিকেট হওয়া আটকাবে
-const referralCode = `${cleanName.substring(0, 3)}${mobile.slice(-4)}${randomSuffix}`;
+  const user = await User.create({
+    name,
+    mobile,
+    password,
+    customId,
+    referralCode,
+    referredBy: referredBy || null,
+    email: email && email.trim() !== '' ? email.toLowerCase() : undefined,
+    // নতুন ইউজার ডিফল্টভাবে 'user' রোল পাবে (মডেল অনুযায়ী)
+  });
 
-const user = await User.create({
-  name,
-  mobile,
-  password,
-  customId, // আমাদের জেনারেট করা ইউনিক আইডি
-  referralCode, // এখন এটি ইউনিক হবেই
-  referredBy: referredBy || null,
-  email: email && email.trim() !== '' ? email.toLowerCase() : undefined,
-});
   if (user) {
     generateToken(res, user._id);
     res.status(201).json({
@@ -100,8 +95,11 @@ const user = await User.create({
       email: user.email,
       mobile: user.mobile,
       customId: user.customId,
-      isAdmin: user.isAdmin,
       image: user.image,
+      role: user.role,
+      walletBalance: user.walletBalance,
+      isAdmin: user.isAdmin,
+      isSuperAdmin: user.isSuperAdmin,
     });
   } else {
     res.status(400);
@@ -133,8 +131,11 @@ export const getUserProfile = asyncHandler(async (req, res) => {
       email: user.email,
       mobile: user.mobile,
       customId: user.customId,
-      isAdmin: user.isAdmin,
       image: user.image,
+      role: user.role,
+      walletBalance: user.walletBalance,
+      isAdmin: user.isAdmin,
+      isSuperAdmin: user.isSuperAdmin,
     });
   } else {
     res.status(404);
@@ -171,8 +172,11 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
       email: updatedUser.email,
       mobile: updatedUser.mobile,
       customId: updatedUser.customId,
-      isAdmin: updatedUser.isAdmin,
       image: updatedUser.image,
+      role: updatedUser.role, 
+      walletBalance: updatedUser.walletBalance,
+      isAdmin: updatedUser.isAdmin,
+      isSuperAdmin: updatedUser.isSuperAdmin,
     });
   } else {
     res.status(404);
@@ -200,7 +204,7 @@ export const getUserById = asyncHandler(async (req, res) => {
 export const deleteUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
   if (user) {
-    if (user.isAdmin) {
+    if (user.isAdmin || user.isSuperAdmin) {
       res.status(400);
       throw new Error('অ্যাডমিন ইউজার ডিলিট করা সম্ভব নয়');
     }
@@ -218,7 +222,12 @@ export const updateUser = asyncHandler(async (req, res) => {
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
     user.mobile = req.body.mobile || user.mobile;
-    user.isAdmin = Boolean(req.body.isAdmin);
+    
+    // অ্যাডমিন দ্বারা রোল এবং ব্যালেন্স আপডেট করার অপশন
+    user.role = req.body.role || user.role;
+    user.walletBalance = req.body.walletBalance || user.walletBalance;
+    user.isAdmin = req.body.isAdmin !== undefined ? Boolean(req.body.isAdmin) : user.isAdmin;
+    user.isSuperAdmin = req.body.isSuperAdmin !== undefined ? Boolean(req.body.isSuperAdmin) : user.isSuperAdmin;
     
     if (req.body.image) {
         user.image = req.body.image;
@@ -230,8 +239,12 @@ export const updateUser = asyncHandler(async (req, res) => {
       name: updatedUser.name,
       email: updatedUser.email,
       mobile: updatedUser.mobile,
-      isAdmin: updatedUser.isAdmin,
+      customId: updatedUser.customId,
       image: updatedUser.image,
+      role: updatedUser.role,
+      walletBalance: updatedUser.walletBalance,
+      isAdmin: updatedUser.isAdmin,
+      isSuperAdmin: updatedUser.isSuperAdmin,
     });
   } else {
     res.status(404);
