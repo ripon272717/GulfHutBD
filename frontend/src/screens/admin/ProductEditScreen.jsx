@@ -26,24 +26,6 @@ const ProductEditScreen = () => {
   const [showOnHomepage, setShowOnHomepage] = useState(true);
   const [categoryOnly, setCategoryOnly] = useState(false);
 
-  // --- আপডেট করা ক্যাটাগরি লিস্ট ---
-  const categories = [
-    'Ladies: Bra',
-    'Ladies: Panty',
-    'Ladies: Lotion',
-    'Ladies: Cream',
-    'Ladies: Soap',
-    'Ladies: Shampoo',
-    'Gents Items',
-    'Kids Items',
-    'Nuts Items',
-    'Electronics',
-    'Grocery',
-    'Mobile',
-    'Fashion',
-    'Health'
-  ];
-
   const { data: product, isLoading, refetch, error } = useGetProductDetailsQuery(productId);
   const [updateProduct, { isLoading: loadingUpdate }] = useUpdateProductMutation();
   const [uploadProductImage, { isLoading: loadingUpload }] = useUploadProductImageMutation();
@@ -115,12 +97,8 @@ const ProductEditScreen = () => {
       <Link to='/admin/productlist' className='btn btn-light my-3 shadow-sm'>
         <i className='fas fa-arrow-left me-2'></i> পিছনে যান
       </Link>
-      {CATEGORIES.map((cat) => (
-     <option key={cat} value={cat}>{cat}</option>
-      ))}
 
       <Row className='justify-content-center'>
-        {/* লার্জ স্ক্রিনে ১০ কলাম (চওড়া হবে), মোবাইলে ১২ কলাম */}
         <Col xs={12} lg={10} xl={9}>
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h2 className="fw-bold text-dark mb-0">প্রোডাক্ট এডিট / এন্ট্রি</h2>
@@ -165,18 +143,29 @@ const ProductEditScreen = () => {
                   </Col>
                   <Col md={6}>
                     <Form.Group controlId='category' className='mb-3'>
-                      <Form.Label className='fw-bold'>ক্যাটাগরি</Form.Label>
-                      <Form.Control
-                        as='select'
+                      <Form.Label className='fw-bold'>Category</Form.Label>
+                      <Form.Select
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
-                        className="bg-light border-0 py-2 shadow-sm"
+                        className='bg-light border-0 py-2 shadow-sm'
                       >
-                        <option value=''>সিলেক্ট করুন</option>
-                        {categories.map((cat) => (
-                          <option key={cat} value={cat}>{cat}</option>
+                        <option value=''>Select Category</option>
+                        {CATEGORIES.map((cat) => (
+                          <optgroup key={cat.name} label={cat.name}>
+                            {/* মেইন ক্যাটাগরি অপশন */}
+                            <option value={cat.name}>{cat.name} (Main)</option>
+                            
+                            {/* সাব-ক্যাটাগরি লুপ */}
+                            {cat.sub && cat.sub.length > 0 && 
+                              cat.sub.map((s) => (
+                                <option key={s} value={s}>
+                                  &nbsp;&nbsp;&nbsp;-- {s}
+                                </option>
+                              ))
+                            }
+                          </optgroup>
                         ))}
-                      </Form.Control>
+                      </Form.Select>
                     </Form.Group>
                   </Col>
                 </Row>
