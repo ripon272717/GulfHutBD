@@ -9,6 +9,7 @@ import {
   useUpdateProductMutation,
   useUploadProductImageMutation,
 } from '../../slices/productsApiSlice';
+import { CATEGORIES } from '../../constants';
 
 const ProductEditScreen = () => {
   const { id: productId } = useParams();
@@ -25,7 +26,23 @@ const ProductEditScreen = () => {
   const [showOnHomepage, setShowOnHomepage] = useState(true);
   const [categoryOnly, setCategoryOnly] = useState(false);
 
-  const categories = ['Electronics', 'Grocery', 'Mobile', 'Fashion', 'Health'];
+  // --- আপডেট করা ক্যাটাগরি লিস্ট ---
+  const categories = [
+    'Ladies: Bra',
+    'Ladies: Panty',
+    'Ladies: Lotion',
+    'Ladies: Cream',
+    'Ladies: Soap',
+    'Ladies: Shampoo',
+    'Gents Items',
+    'Kids Items',
+    'Nuts Items',
+    'Electronics',
+    'Grocery',
+    'Mobile',
+    'Fashion',
+    'Health'
+  ];
 
   const { data: product, isLoading, refetch, error } = useGetProductDetailsQuery(productId);
   const [updateProduct, { isLoading: loadingUpdate }] = useUpdateProductMutation();
@@ -98,6 +115,9 @@ const ProductEditScreen = () => {
       <Link to='/admin/productlist' className='btn btn-light my-3 shadow-sm'>
         <i className='fas fa-arrow-left me-2'></i> পিছনে যান
       </Link>
+      {CATEGORIES.map((cat) => (
+     <option key={cat} value={cat}>{cat}</option>
+      ))}
 
       <Row className='justify-content-center'>
         {/* লার্জ স্ক্রিনে ১০ কলাম (চওড়া হবে), মোবাইলে ১২ কলাম */}

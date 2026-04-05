@@ -8,6 +8,9 @@ import { logout, setCredentials } from '../slices/authSlice';
 import logo from '../assets/gulflogo.png';
 import { toast } from 'react-toastify';
 import { FaTimes } from 'react-icons/fa';
+import { NavDropdown } from 'react-bootstrap';
+import { LinkContainer } from 'react-router-bootstrap';
+import { CATEGORIES } from '../constants';
 
 const Header = () => {
   const [showSidebar, setShowSidebar] = useState(false);
@@ -25,6 +28,7 @@ const Header = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
 
   const [logoutApiCall] = useLogoutMutation();
   const [updateProfile, { isLoading: isUpdatingProfile }] = useProfileMutation();
@@ -129,8 +133,25 @@ const Header = () => {
         .bg-user { background: #198754 !important; color: white; }
         .edit-input { background: #fff !important; border: 1px solid #ddd !important; border-radius: 8px !important; font-size: 14px; margin-bottom: 10px; }
         .offcanvas { background: #212529 !important; color: white !important; }
-        .offcanvas-link { color: white !important; text-decoration: none; padding: 15px 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #333; transition: 0.3s; }
+        .offcanvas-link { color: white !important; text-decoration: none; padding: 15px 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #333; transition: 0.3s; cursor: pointer; }
         .offcanvas-link:hover { background: #333; color: #ffc107 !important; }
+        
+        /* Category Dropdown Styling */
+        .category-dropdown .dropdown-toggle::after { display: none; }
+        .category-dropdown .dropdown-menu { background: #212529; border: 1px solid #ffc107; border-radius: 10px; padding: 10px; }
+        .category-dropdown .dropdown-item { color: white; font-size: 13px; border-bottom: 1px solid #333; padding: 8px 15px; }
+        .category-dropdown .dropdown-item:hover { background: #ffc107 !important; color: black !important; border-radius: 5px; }
+
+        /* Submenu Styling for PC */
+        .dropdown-submenu { position: relative; }
+        .dropdown-submenu .submenu-content { 
+          display: none; position: absolute; left: 100%; top: 0; 
+          background: #212529; border: 1px solid #ffc107; min-width: 160px; 
+          border-radius: 8px; z-index: 1000; padding: 5px;
+        }
+        .dropdown-submenu:hover .submenu-content { display: block; }
+        .dropdown-submenu:hover > span { color: #ffc107 !important; }
+        
         @media (max-width: 991px) { .pc-only { display: none !important; } }
       `}</style>
 
@@ -142,20 +163,41 @@ const Header = () => {
             <img src={logo} alt='logo' width='40'/>
           </Navbar.Brand>
 
-          {/* PC Menu (Left Side) - ৫টি মেনু দিয়ে সাজানো */}
+          {/* PC Menu (Left Side) */}
           <div className='pc-only me-auto'>
             <Nav className='gap-4 align-items-center'>
-              {/* ১. Home */}
               <Link to="/" className='text-white text-decoration-none small d-flex align-items-center gap-1'>
                 <FaHome className='text-warning'/> Home
               </Link>
 
-              {/* ২. Category */}
-              <Link to="/category" className='text-white text-decoration-none small d-flex align-items-center gap-1'>
-                <FaThList className='text-warning'/> Category
-              </Link>
+              {/* PC Category Dropdown with Sub-menu */}
+              <NavDropdown 
+                title={<span><FaThList className='text-warning me-1'/> Category</span>} 
+                id="pc-category-dropdown" 
+                className="category-dropdown small"
+              >
+                {CATEGORIES.map((item) => (
+                  item.sub && item.sub.length > 0 ? (
+                    <div key={item.name} className="dropdown-submenu px-3 py-2 text-white" style={{cursor: 'pointer'}}>
+                      <span className="d-flex justify-content-between align-items-center" style={{fontSize: '13px'}}>
+                        {item.name} <small>▶</small>
+                      </span>
+                      <div className="submenu-content shadow">
+                        {item.sub.map((s) => (
+                          <LinkContainer key={s} to={`/search/category/${s}`}>
+                            <NavDropdown.Item>{s}</NavDropdown.Item>
+                          </LinkContainer>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <LinkContainer key={item.name} to={`/search/category/${item.name}`}>
+                      <NavDropdown.Item>{item.name}</NavDropdown.Item>
+                    </LinkContainer>
+                  )
+                ))}
+              </NavDropdown>
 
-              {/* ৩. Dashboard (সবার জন্য এক্সেসিবল) */}
               <Link 
                 to={isAdmin ? "/admin/dashboard" : "/dashboard"} 
                 className='text-white text-decoration-none small d-flex align-items-center gap-1'
@@ -163,14 +205,12 @@ const Header = () => {
                 <FaChartLine className='text-warning'/> Dashboard
               </Link>
 
-              {/* ৪. About Us */}
               <Link to="/about" className='text-white text-decoration-none small d-flex align-items-center gap-1'>
                 <FaUserPlus className='text-warning'/> About Us
               </Link>
 
-              {/* ৫. Discussion & Rules */}
               <Link to="/rules" className='text-white text-decoration-none small d-flex align-items-center gap-1'>
-                <FaCheckCircle className='text-warning'/> Discussion & Rules
+                <FaCheckCircle className='text-warning'/> Discussion
               </Link>
             </Nav>
           </div>
@@ -184,13 +224,13 @@ const Header = () => {
 
           <div className='d-flex align-items-center ms-2'>
             <div className='pc-only me-3 position-relative' style={{color:'white', cursor:'pointer'}} onClick={() => navigate('/cart')}>
-               <FaShoppingCart size={22}/>
-               {cartItems.length > 0 && <Badge pill bg='warning' text='dark' style={{position:'absolute', top:'-10px', right:'-10px'}}>{cartItems.length}</Badge>}
+                <FaShoppingCart size={22}/>
+                {cartItems.length > 0 && <Badge pill bg='warning' text='dark' style={{position:'absolute', top:'-10px', right:'-10px'}}>{cartItems.length}</Badge>}
             </div>
 
             {userInfo ? (
               <div className='d-flex align-items-center' onClick={() => setShowProfileModal(true)} style={{cursor:'pointer'}}>
-                <div className='text-end me-2'>
+                <div className='text-end me-2 d-none d-sm-block'>
                   <div className="user-name-box">{userInfo.name}</div>
                   <div style={{color:'#ffc107', fontSize:'11px', fontWeight: 'bold'}}>QR {userInfo.balance || 0}</div>
                 </div>
@@ -202,6 +242,7 @@ const Header = () => {
           </div>
         </Container>
       </Navbar>
+
       <div className="notice-board"><marquee scrollamount="5">Fastest shipping from Qatar to Bangladesh - Gulf Hut</marquee></div>
 
       {/* Mobile Sidebar (Offcanvas) */}
@@ -210,42 +251,50 @@ const Header = () => {
           <Offcanvas.Title className='text-warning fw-bold'>GULF HUT MENU</Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body className='p-0 d-flex flex-column'>
-          
-          {/* ১. Home */}
           <Link to="/" className='offcanvas-link' onClick={() => setShowSidebar(false)}>
             <FaHome className='text-warning'/> Home
           </Link>
 
-          {/* ২. Category */}
-          <Link to="/category" className='offcanvas-link' onClick={() => setShowSidebar(false)}>
-            <FaThList className='text-warning'/> Categories
-          </Link>
-
-          {/* ৩. Dashboard (সবার জন্য) */}
-          <Link 
-            to={isAdmin ? "/admin/dashboard" : "/dashboard"} 
-            className='offcanvas-link' 
-            onClick={() => setShowSidebar(false)}
+          {/* Mobile Category Dropdown with Sub-items */}
+          <NavDropdown 
+            title={<span><FaThList className='text-warning me-2'/> Categories</span>} 
+            className='offcanvas-link text-white w-100' 
+            id="mobile-category-dropdown"
           >
+            {CATEGORIES.map((item) => (
+              item.sub && item.sub.length > 0 ? (
+                <div key={item.name} className="ps-3 border-bottom border-secondary bg-dark pb-2">
+                  <div className="text-warning fw-bold py-2 small" style={{fontSize:'12px'}}>{item.name}</div>
+                  {item.sub.map((s) => (
+                    <LinkContainer key={s} to={`/search/category/${s}`} onClick={() => setShowSidebar(false)}>
+                      <NavDropdown.Item className='text-white-50 ps-4 small py-1' style={{background:'transparent'}}>- {s}</NavDropdown.Item>
+                    </LinkContainer>
+                  ))}
+                </div>
+              ) : (
+                <LinkContainer key={item.name} to={`/search/category/${item.name}`} onClick={() => setShowSidebar(false)}>
+                  <NavDropdown.Item className='bg-dark text-white border-bottom border-secondary py-2'>{item.name}</NavDropdown.Item>
+                </LinkContainer>
+              )
+            ))}
+          </NavDropdown>
+
+          <Link to={isAdmin ? "/admin/dashboard" : "/dashboard"} className='offcanvas-link' onClick={() => setShowSidebar(false)}>
             <FaChartLine className='text-warning'/> Dashboard
           </Link>
 
-          {/* ৪. About Us */}
           <Link to="/about" className='offcanvas-link' onClick={() => setShowSidebar(false)}>
             <FaUserPlus className='text-warning'/> About Us
           </Link>
 
-          {/* ৫. Discussion & Rules */}
           <Link to="/rules" className='offcanvas-link' onClick={() => setShowSidebar(false)}>
-            <FaCheckCircle className='text-warning'/> Discussion & Rules
+            <FaCheckCircle className='text-warning'/> Rules & Discussion
           </Link>
 
-          {/* অতিরিক্ত: My Cart (যেহেতু এটা প্রয়োজনীয়) */}
           <Link to="/cart" className='offcanvas-link' onClick={() => setShowSidebar(false)}>
             <FaShoppingCart className='text-warning'/> My Cart ({cartItems.length})
           </Link>
 
-          {/* Logout Button - একদম নিচে থাকবে */}
           <div className='p-4 mt-auto'>
             <Button variant='danger' className='w-100 rounded-pill' onClick={logoutHandler}>
               <FaSignOutAlt className='me-2'/> Logout
@@ -253,6 +302,7 @@ const Header = () => {
           </div>
         </Offcanvas.Body>
       </Offcanvas>
+
       {/* Profile Modal */}
       <Modal 
         show={showProfileModal} 
@@ -264,19 +314,9 @@ const Header = () => {
         <button 
           onClick={() => {setShowProfileModal(false); setIsEditMode(false);}} 
           style={{
-            position: 'absolute', 
-            right: '15px', 
-            top: '15px', 
-            zIndex: 10, 
-            border: 'none', 
-            background: '#f1f1f1', 
-            borderRadius: '50%', 
-            width: '32px', 
-            height: '32px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+            position: 'absolute', right: '15px', top: '15px', zIndex: 10, border: 'none', 
+            background: '#f1f1f1', borderRadius: '50%', width: '32px', height: '32px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
           }}
         >
           <FaTimes />
@@ -300,31 +340,19 @@ const Header = () => {
             <input type='file' ref={fileInputRef} hidden onChange={uploadFileHandler}/>
           </div>
 
-          {/* নাম, CID এবং রোল - আলাদা আলাদা লাইনে */}
           <div className='mb-3'>
-            {/* ১. নাম - ফন্ট কালার ব্ল্যাক সেট করা হয়েছে */}
             <div className='d-block mb-2'>
               <h5 className='fw-bold m-0' style={{ color: '#000000', display: 'block' }}>
                 {userInfo?.name || "User Name"}
               </h5>
             </div>
-            
-            {/* লাইন ২: কাস্টমার আইডি (CID) */}
             <div className='d-block mb-2'>
-              <div style={{ 
-                display: 'inline-block', 
-                background: '#f8f9fa', 
-                border: '1px solid #ddd', 
-                padding: '2px 12px', 
-                borderRadius: '6px' 
-              }}>
+              <div style={{ display: 'inline-block', background: '#f8f9fa', border: '1px solid #ddd', padding: '2px 12px', borderRadius: '6px' }}>
                 <span className='fw-bold' style={{ fontSize: '0.9rem', color: '#333' }}>
                   CID: {userInfo?.customId || 'QHBD000000'}
                 </span>
               </div>
             </div>
-
-            {/* লাইন ৩: রোল */}
             <div className='d-block'>
               <div className={`role-badge bg-${userInfo?.role || 'user'}`} style={{ display: 'inline-block' }}>
                 {userInfo?.role || 'user'}
@@ -402,52 +430,33 @@ const Header = () => {
 
       {/* Mobile Bottom Navigation Bar */}
       <div className='d-lg-none' style={{
-        position:'fixed', 
-        bottom:0, 
-        width:'100%', 
-        background:'#212529', 
-        display:'flex', 
-        justifyContent: 'space-around',
-        padding:'8px 0', 
-        borderTop:'2px solid #ffc107', 
-        zIndex:1030,
-        boxShadow: '0 -2px 10px rgba(0,0,0,0.3)'
+        position:'fixed', bottom:0, width:'100%', background:'#212529', display:'flex', 
+        justifyContent: 'space-around', padding:'8px 0', borderTop:'2px solid #ffc107', 
+        zIndex:1030, boxShadow: '0 -2px 10px rgba(0,0,0,0.3)'
       }}>
-        {/* ১. Home */}
         <div onClick={() => navigate('/')} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
           <FaHome size={20} style={{color: location.pathname === '/' ? '#ffc107' : 'white'}}/><br/>Home
         </div>
 
-        {/* ২. Category */}
         <div onClick={() => navigate('/category')} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
           <FaThList size={20} style={{color: location.pathname === '/category' ? '#ffc107' : 'white'}}/><br/>Category
         </div>
 
-        {/* ৩. Dashboard (Middle - Special Highlight) */}
         <div onClick={() => navigate(isAdmin ? '/admin/dashboard' : '/dashboard')} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
           <div style={{
-            background: '#ffc107', 
-            width: '45px', 
-            height: '45px', 
-            borderRadius: '50%', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            margin: '-25px auto 5px', // এটাকে একটু উপরে উঠিয়ে দেওয়া হয়েছে
-            border: '4px solid #212529',
-            boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+            background: '#ffc107', width: '45px', height: '45px', borderRadius: '50%', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '-25px auto 5px', 
+            border: '4px solid #212529', boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
           }}>
             <FaChartLine size={20} color='#000'/>
           </div>
           Dashboard
         </div>
 
-        {/* ৪. Contact / Support */}
         <div onClick={() => navigate('/contact')} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
           <FaUserPlus size={20} style={{color: location.pathname === '/contact' ? '#ffc107' : 'white'}}/><br/>Contact
         </div>
        
-        {/* ৫. Profile */}
         <div onClick={() => setShowProfileModal(true)} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
           <div className="position-relative d-inline-block">
             <FaUserCircle size={20} style={{color: showProfileModal ? '#ffc107' : 'white'}}/>

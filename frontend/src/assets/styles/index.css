@@ -252,3 +252,58 @@ body {
     padding-left: 5px !important;
   }
 }
+
+.category-nav-dropdown .dropdown-menu {
+  background-color: #343a40;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.category-nav-dropdown .dropdown-item {
+  color: white;
+  font-size: 14px;
+}
+.category-nav-dropdown .dropdown-item:hover {
+  background-color: #ffc107;
+  color: black;
+}
+/* ক্যাটাগরি লেখা উজ্জ্বল করার জন্য */
+.category-dropdown .nav-link, 
+.category-dropdown .dropdown-toggle {
+  color: white !important;
+  opacity: 1 !important;
+  font-weight: 500;
+}
+
+/* মাউস নিলে যাতে হলুদ হয় */
+.category-dropdown .nav-link:hover {
+  color: #ffc107 !important;
+}
+/* সাব-মেনু স্টাইলিং */
+.dropdown-submenu {
+  position: relative;
+}
+
+.submenu-content {
+  display: none;
+  position: absolute;
+  left: 100%;
+  top: 0;
+  background: #212529;
+  border: 1px solid #ffc107;
+  min-width: 150px;
+  border-radius: 5px;
+  z-index: 1000;
+}
+
+.dropdown-submenu:hover .submenu-content {
+  display: block;
+}
+
+.dropdown-submenu:hover {
+  background: #ffc107;
+  color: black !important;
+}
+
+.submenu-content .dropdown-item {
+  border-bottom: 1px solid #444;
+}
