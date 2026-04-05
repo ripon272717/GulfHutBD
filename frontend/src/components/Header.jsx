@@ -142,12 +142,36 @@ const Header = () => {
             <img src={logo} alt='logo' width='40'/>
           </Navbar.Brand>
 
+          {/* PC Menu (Left Side) - ৫টি মেনু দিয়ে সাজানো */}
           <div className='pc-only me-auto'>
-            <Nav className='gap-3 align-items-center'>
-              <Link to="/" className='text-white text-decoration-none small'><FaHome/> Home</Link>
-              <Link to="/category" className='text-white text-decoration-none small'><FaThList/> Category</Link>
-              <Link to="/shop" className='text-white text-decoration-none small'><FaShoppingBag/> Shop</Link>
-              {isAdmin && <Link to="/admin/dashboard" className='text-warning text-decoration-none small fw-bold'>Dashboard</Link>}
+            <Nav className='gap-4 align-items-center'>
+              {/* ১. Home */}
+              <Link to="/" className='text-white text-decoration-none small d-flex align-items-center gap-1'>
+                <FaHome className='text-warning'/> Home
+              </Link>
+
+              {/* ২. Category */}
+              <Link to="/category" className='text-white text-decoration-none small d-flex align-items-center gap-1'>
+                <FaThList className='text-warning'/> Category
+              </Link>
+
+              {/* ৩. Dashboard (সবার জন্য এক্সেসিবল) */}
+              <Link 
+                to={isAdmin ? "/admin/dashboard" : "/dashboard"} 
+                className='text-white text-decoration-none small d-flex align-items-center gap-1'
+              >
+                <FaChartLine className='text-warning'/> Dashboard
+              </Link>
+
+              {/* ৪. About Us */}
+              <Link to="/about" className='text-white text-decoration-none small d-flex align-items-center gap-1'>
+                <FaUserPlus className='text-warning'/> About Us
+              </Link>
+
+              {/* ৫. Discussion & Rules */}
+              <Link to="/rules" className='text-white text-decoration-none small d-flex align-items-center gap-1'>
+                <FaCheckCircle className='text-warning'/> Discussion & Rules
+              </Link>
             </Nav>
           </div>
 
@@ -180,26 +204,55 @@ const Header = () => {
       </Navbar>
       <div className="notice-board"><marquee scrollamount="5">Fastest shipping from Qatar to Bangladesh - Gulf Hut</marquee></div>
 
+      {/* Mobile Sidebar (Offcanvas) */}
       <Offcanvas show={showSidebar} onHide={() => setShowSidebar(false)} placement='start'>
         <Offcanvas.Header closeButton closeVariant='white' className='border-bottom border-secondary'>
           <Offcanvas.Title className='text-warning fw-bold'>GULF HUT MENU</Offcanvas.Title>
         </Offcanvas.Header>
-        <Offcanvas.Body className='p-0'>
-          <Link to="/" className='offcanvas-link' onClick={() => setShowSidebar(false)}><FaHome/> Home</Link>
-          <Link to="/category" className='offcanvas-link' onClick={() => setShowSidebar(false)}><FaThList/> Categories</Link>
-          <Link to="/shop" className='offcanvas-link' onClick={() => setShowSidebar(false)}><FaShoppingBag/> Shop</Link>
-          {isAdmin && (
-            <Link to="/admin/dashboard" className='offcanvas-link text-warning fw-bold' onClick={() => setShowSidebar(false)}>
-              <FaChartLine/> Admin Dashboard
-            </Link>
-          )}
-          <Link to="/cart" className='offcanvas-link' onClick={() => setShowSidebar(false)}><FaShoppingCart/> My Cart ({cartItems.length})</Link>
+        <Offcanvas.Body className='p-0 d-flex flex-column'>
+          
+          {/* ১. Home */}
+          <Link to="/" className='offcanvas-link' onClick={() => setShowSidebar(false)}>
+            <FaHome className='text-warning'/> Home
+          </Link>
+
+          {/* ২. Category */}
+          <Link to="/category" className='offcanvas-link' onClick={() => setShowSidebar(false)}>
+            <FaThList className='text-warning'/> Categories
+          </Link>
+
+          {/* ৩. Dashboard (সবার জন্য) */}
+          <Link 
+            to={isAdmin ? "/admin/dashboard" : "/dashboard"} 
+            className='offcanvas-link' 
+            onClick={() => setShowSidebar(false)}
+          >
+            <FaChartLine className='text-warning'/> Dashboard
+          </Link>
+
+          {/* ৪. About Us */}
+          <Link to="/about" className='offcanvas-link' onClick={() => setShowSidebar(false)}>
+            <FaUserPlus className='text-warning'/> About Us
+          </Link>
+
+          {/* ৫. Discussion & Rules */}
+          <Link to="/rules" className='offcanvas-link' onClick={() => setShowSidebar(false)}>
+            <FaCheckCircle className='text-warning'/> Discussion & Rules
+          </Link>
+
+          {/* অতিরিক্ত: My Cart (যেহেতু এটা প্রয়োজনীয়) */}
+          <Link to="/cart" className='offcanvas-link' onClick={() => setShowSidebar(false)}>
+            <FaShoppingCart className='text-warning'/> My Cart ({cartItems.length})
+          </Link>
+
+          {/* Logout Button - একদম নিচে থাকবে */}
           <div className='p-4 mt-auto'>
-            <Button variant='danger' className='w-100 rounded-pill' onClick={logoutHandler}><FaSignOutAlt/> Logout</Button>
+            <Button variant='danger' className='w-100 rounded-pill' onClick={logoutHandler}>
+              <FaSignOutAlt className='me-2'/> Logout
+            </Button>
           </div>
         </Offcanvas.Body>
       </Offcanvas>
-
       {/* Profile Modal */}
       <Modal 
         show={showProfileModal} 
@@ -347,11 +400,65 @@ const Header = () => {
         </Modal.Body>
       </Modal>
 
-      <div className='d-lg-none' style={{position:'fixed', bottom:0, width:'100%', background:'#212529', display:'flex', padding:'10px 0', borderTop:'2px solid #ffc107', zIndex:1030}}>
-        <div onClick={() => navigate('/')} className='flex-grow-1 text-center text-white' style={{fontSize:'11px'}}><FaHome size={20}/><br/>Home</div>
-        <div onClick={() => navigate('/shop')} className='flex-grow-1 text-center text-white' style={{fontSize:'11px'}}><FaShoppingBag size={20}/><br/>Shop</div>
-        <div onClick={() => navigate('/cart')} className='flex-grow-1 text-center text-white' style={{fontSize:'11px', position:'relative'}}><FaShoppingCart size={20}/><br/>Cart {cartItems.length > 0 && <Badge pill bg='warning' text='dark' style={{position:'absolute', top:'-5px'}}>{cartItems.length}</Badge>}</div>
-       <div onClick={() => setShowProfileModal(true)} className='flex-grow-1 text-center text-white' style={{fontSize:'11px'}}><FaUserCircle size={20}/><br/>Profile</div>
+      {/* Mobile Bottom Navigation Bar */}
+      <div className='d-lg-none' style={{
+        position:'fixed', 
+        bottom:0, 
+        width:'100%', 
+        background:'#212529', 
+        display:'flex', 
+        justifyContent: 'space-around',
+        padding:'8px 0', 
+        borderTop:'2px solid #ffc107', 
+        zIndex:1030,
+        boxShadow: '0 -2px 10px rgba(0,0,0,0.3)'
+      }}>
+        {/* ১. Home */}
+        <div onClick={() => navigate('/')} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
+          <FaHome size={20} style={{color: location.pathname === '/' ? '#ffc107' : 'white'}}/><br/>Home
+        </div>
+
+        {/* ২. Category */}
+        <div onClick={() => navigate('/category')} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
+          <FaThList size={20} style={{color: location.pathname === '/category' ? '#ffc107' : 'white'}}/><br/>Category
+        </div>
+
+        {/* ৩. Dashboard (Middle - Special Highlight) */}
+        <div onClick={() => navigate(isAdmin ? '/admin/dashboard' : '/dashboard')} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
+          <div style={{
+            background: '#ffc107', 
+            width: '45px', 
+            height: '45px', 
+            borderRadius: '50%', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            margin: '-25px auto 5px', // এটাকে একটু উপরে উঠিয়ে দেওয়া হয়েছে
+            border: '4px solid #212529',
+            boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+          }}>
+            <FaChartLine size={20} color='#000'/>
+          </div>
+          Dashboard
+        </div>
+
+        {/* ৪. Contact / Support */}
+        <div onClick={() => navigate('/contact')} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
+          <FaUserPlus size={20} style={{color: location.pathname === '/contact' ? '#ffc107' : 'white'}}/><br/>Contact
+        </div>
+       
+        {/* ৫. Profile */}
+        <div onClick={() => setShowProfileModal(true)} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
+          <div className="position-relative d-inline-block">
+            <FaUserCircle size={20} style={{color: showProfileModal ? '#ffc107' : 'white'}}/>
+            {cartItems.length > 0 && (
+               <Badge pill bg='warning' text='dark' style={{position:'absolute', top:'-8px', right:'-8px', fontSize: '8px'}}>
+                 {cartItems.length}
+               </Badge>
+            )}
+          </div>
+          <br/>Profile
+        </div>
       </div>
     </header>
   );

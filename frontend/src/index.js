@@ -32,6 +32,7 @@ import PaymentScreen from './screens/PaymentScreen';
 import PlaceOrderScreen from './screens/PlaceOrderScreen';
 import OrderScreen from './screens/OrderScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import DashboardScreen from './screens/DashboardScreen'; // ড্যাশবোর্ড স্ক্রিন ইম্পোর্ট
 
 // Admin Screens
 import OrderListScreen from './screens/admin/OrderListScreen';
@@ -39,7 +40,7 @@ import ProductListScreen from './screens/admin/ProductListScreen';
 import ProductEditScreen from './screens/admin/ProductEditScreen';
 import UserListScreen from './screens/admin/UserListScreen';
 import UserEditScreen from './screens/admin/UserEditScreen';
-import UserBalanceEditScreen from './screens/admin/UserBalanceEditScreen'; 
+import UserBalanceEditScreen from './screens/admin/UserBalanceEditScreen';
 
 // Axios Configuration for Cookies
 axios.defaults.withCredentials = true;
@@ -60,8 +61,9 @@ const router = createBrowserRouter(
       <Route path='/login' element={<LoginScreen />} />
       <Route path='/register' element={<RegisterScreen />} />
       
-      {/* Private Routes (Registered users) */}
+      {/* Private Routes (শুধুমাত্র লগইন করা ইউজারদের জন্য) */}
       <Route path='' element={<PrivateRoute />}>
+        <Route path='/dashboard' element={<DashboardScreen />} /> {/* ড্যাশবোর্ড রাউট এখানে থাকবে */}
         <Route path='/shipping' element={<ShippingScreen />} />
         <Route path='/payment' element={<PaymentScreen />} />
         <Route path='/placeorder' element={<PlaceOrderScreen />} />
@@ -69,8 +71,9 @@ const router = createBrowserRouter(
         <Route path='/profile' element={<ProfileScreen />} />
       </Route>
 
-      {/* Admin Routes */}
+      {/* Admin Routes (শুধুমাত্র অ্যাডমিনদের জন্য) */}
       <Route path='' element={<AdminRoute />}>
+        <Route path='/admin/dashboard' element={<DashboardScreen />} /> {/* অ্যাডমিনও যেন ড্যাশবোর্ড দেখতে পারে */}
         <Route path='/admin/orderlist' element={<OrderListScreen />} />
         <Route path='/admin/productlist' element={<ProductListScreen />} />
         <Route
@@ -81,7 +84,7 @@ const router = createBrowserRouter(
         <Route path='/admin/product/:id/edit' element={<ProductEditScreen />} />
         <Route path='/admin/user/:id/edit' element={<UserEditScreen />} />
         
-        {/* ব্যালেন্স এডিট করার নতুন রাউট */}
+        {/* ব্যালেন্স এডিট করার রাউট */}
         <Route path='/admin/user/:id/balance' element={<UserBalanceEditScreen />} />
       </Route>
     </Route>

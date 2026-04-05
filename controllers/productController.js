@@ -1,11 +1,11 @@
 import asyncHandler from '../middleware/asyncHandler.js';
 import Product from '../models/productModel.js';
 
-// @desc    Fetch all products
+// @desc    Fetch all products (with Search & Pagination)
 // @route   GET /api/products
 // @access  Public
 const getProducts = asyncHandler(async (req, res) => {
-  const pageSize = process.env.PAGINATION_LIMIT;
+  const pageSize = Number(process.env.PAGINATION_LIMIT) || 8;
   const page = Number(req.query.pageNumber) || 1;
 
   const keyword = req.query.keyword
@@ -20,7 +20,8 @@ const getProducts = asyncHandler(async (req, res) => {
   const count = await Product.countDocuments({ ...keyword });
   const products = await Product.find({ ...keyword })
     .limit(pageSize)
-    .skip(pageSize * (page - 1));
+    .skip(pageSize * (page - 1))
+    .sort({ createdAt: -1 }); // নতুন প্রোডাক্ট আগে দেখাবে
 
   res.json({ products, page, pages: Math.ceil(count / pageSize) });
 });
@@ -29,27 +30,23 @@ const getProducts = asyncHandler(async (req, res) => {
 // @route   GET /api/products/:id
 // @access  Public
 const getProductById = asyncHandler(async (req, res) => {
-  // NOTE: checking for valid ObjectId to prevent CastError moved to separate
-  // middleware. See README for more info.
-
   const product = await Product.findById(req.params.id);
   if (product) {
     return res.json(product);
   } else {
-    // NOTE: this will run if a valid ObjectId but no product was found
-    // i.e. product may be null
     res.status(404);
-    throw new Error('Product not found');
+    throw new Error('প্রোডাক্টটি খুঁজে পাওয়া যায়নি');
   }
 });
 
-// @desc    Create a product
+// @desc    Create a product (Initial Sample)
 // @route   POST /api/products
 // @access  Private/Admin
 const createProduct = asyncHandler(async (req, res) => {
   const product = new Product({
     name: 'Sample name',
-    price: 0,
+    priceQR: 0,
+    priceBDT: 0,
     user: req.user._id,
     image: '/images/sample.jpg',
     brand: 'Sample brand',
@@ -57,6 +54,9 @@ const createProduct = asyncHandler(async (req, res) => {
     countInStock: 0,
     numReviews: 0,
     description: 'Sample description',
+    shippingTime: '7-15 Days',
+    showOnHomepage: true,
+    categoryOnly: false,
   });
 
   const createdProduct = await product.save();
@@ -67,25 +67,40 @@ const createProduct = asyncHandler(async (req, res) => {
 // @route   PUT /api/products/:id
 // @access  Private/Admin
 const updateProduct = asyncHandler(async (req, res) => {
-  const { name, price, description, image, brand, category, countInStock } =
-    req.body;
+  const {
+    name,
+    priceQR,
+    priceBDT,
+    description,
+    image,
+    brand,
+    category,
+    countInStock,
+    shippingTime,
+    showOnHomepage,
+    categoryOnly,
+  } = req.body;
 
   const product = await Product.findById(req.params.id);
 
   if (product) {
     product.name = name;
-    product.price = price;
+    product.priceQR = priceQR;
+    product.priceBDT = priceBDT;
     product.description = description;
     product.image = image;
     product.brand = brand;
     product.category = category;
     product.countInStock = countInStock;
+    product.shippingTime = shippingTime;
+    product.showOnHomepage = showOnHomepage;
+    product.categoryOnly = categoryOnly;
 
     const updatedProduct = await product.save();
     res.json(updatedProduct);
   } else {
     res.status(404);
-    throw new Error('Product not found');
+    throw new Error('প্রোডাক্ট পাওয়া যায়নি');
   }
 });
 
@@ -97,10 +112,10 @@ const deleteProduct = asyncHandler(async (req, res) => {
 
   if (product) {
     await Product.deleteOne({ _id: product._id });
-    res.json({ message: 'Product removed' });
+    res.json({ message: 'প্রোডাক্ট মুছে ফেলা হয়েছে' });
   } else {
     res.status(404);
-    throw new Error('Product not found');
+    throw new Error('প্রোডাক্ট পাওয়া যায়নি');
   }
 });
 
@@ -119,7 +134,7 @@ const createProductReview = asyncHandler(async (req, res) => {
 
     if (alreadyReviewed) {
       res.status(400);
-      throw new Error('Product already reviewed');
+      throw new Error('আপনি অলরেডি রিভিউ দিয়েছেন');
     }
 
     const review = {
@@ -130,18 +145,16 @@ const createProductReview = asyncHandler(async (req, res) => {
     };
 
     product.reviews.push(review);
-
     product.numReviews = product.reviews.length;
-
     product.rating =
       product.reviews.reduce((acc, item) => item.rating + acc, 0) /
       product.reviews.length;
 
     await product.save();
-    res.status(201).json({ message: 'Review added' });
+    res.status(201).json({ message: 'রিভিউ যোগ করা হয়েছে' });
   } else {
     res.status(404);
-    throw new Error('Product not found');
+    throw new Error('প্রোডাক্ট পাওয়া যায়নি');
   }
 });
 
@@ -150,7 +163,6 @@ const createProductReview = asyncHandler(async (req, res) => {
 // @access  Public
 const getTopProducts = asyncHandler(async (req, res) => {
   const products = await Product.find({}).sort({ rating: -1 }).limit(3);
-
   res.json(products);
 });
 

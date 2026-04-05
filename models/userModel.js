@@ -13,12 +13,20 @@ const userSchema = mongoose.Schema(
     walletBalance: { type: Number, required: true, default: 0 },
     image: { type: String, default: '' },
     
-    // নতুন রোল ফিল্ড (এটি ডিফল্টভাবে 'user' থাকবে)
+    // নতুন রোল ফিল্ড
     role: {
       type: String,
       required: true,
       default: 'user',
       enum: ['user', 'admin', 'superadmin'],
+    },
+
+    // --- স্ট্যাটাস ফিল্ড (টিক/ক্রস লজিকের জন্য) ---
+    status: {
+      type: String,
+      required: true,
+      default: 'active', // ডিফল্টভাবে সবাই অ্যাক্টিভ (টিক দেখাবে)
+      enum: ['active', 'banned'], // শুধুমাত্র এই দুটি ভ্যালু গ্রহণ করবে
     },
 
     // তোর আগের সব ফিল্ড অপরিবর্তিত রাখা হলো
@@ -36,7 +44,7 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 // পাসওয়ার্ড হ্যাশ করার প্রাক-সেভ লজিক
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
-    return next(); // return যোগ করা নিরাপদ
+    return next(); 
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);

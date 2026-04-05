@@ -17,6 +17,12 @@ export const authUser = asyncHandler(async (req, res) => {
   });
 
   if (user && (await user.matchPassword(password))) {
+    // ইউজার যদি ব্যান থাকে তবে লগইন করতে পারবে না
+    if (user.status === 'banned') {
+      res.status(403);
+      throw new Error('আপনার অ্যাকাউন্টটি ব্যান করা হয়েছে। দয়া করে অ্যাডমিনের সাথে যোগাযোগ করুন।');
+    }
+
     generateToken(res, user._id);
 
     res.json({
@@ -26,8 +32,8 @@ export const authUser = asyncHandler(async (req, res) => {
       mobile: user.mobile,
       customId: user.customId,
       image: user.image,
-      // রোল এবং ব্যালেন্স অ্যাড করা হলো সিঙ্ক হওয়ার জন্য
       role: user.role,
+      status: user.status, // স্ট্যাটাস অ্যাড করা হলো
       walletBalance: user.walletBalance,
       isAdmin: user.isAdmin,
       isSuperAdmin: user.isSuperAdmin,
@@ -82,9 +88,9 @@ export const registerUser = asyncHandler(async (req, res) => {
     password,
     customId,
     referralCode,
+    status: 'active', // নতুন ইউজার ডিফল্টভাবে একটিভ থাকবে
     referredBy: referredBy || null,
     email: email && email.trim() !== '' ? email.toLowerCase() : undefined,
-    // নতুন ইউজার ডিফল্টভাবে 'user' রোল পাবে (মডেল অনুযায়ী)
   });
 
   if (user) {
@@ -97,6 +103,7 @@ export const registerUser = asyncHandler(async (req, res) => {
       customId: user.customId,
       image: user.image,
       role: user.role,
+      status: user.status,
       walletBalance: user.walletBalance,
       isAdmin: user.isAdmin,
       isSuperAdmin: user.isSuperAdmin,
@@ -108,7 +115,6 @@ export const registerUser = asyncHandler(async (req, res) => {
 });
 
 // @desc    Logout user / clear cookie
-// @route   POST /api/users/logout
 export const logoutUser = (req, res) => {
   res.cookie('jwt', '', {
     httpOnly: true,
@@ -120,7 +126,6 @@ export const logoutUser = (req, res) => {
 };
 
 // @desc    Get user profile
-// @route   GET /api/users/profile
 export const getUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
@@ -133,6 +138,7 @@ export const getUserProfile = asyncHandler(async (req, res) => {
       customId: user.customId,
       image: user.image,
       role: user.role,
+      status: user.status,
       walletBalance: user.walletBalance,
       isAdmin: user.isAdmin,
       isSuperAdmin: user.isSuperAdmin,
@@ -144,7 +150,6 @@ export const getUserProfile = asyncHandler(async (req, res) => {
 });
 
 // @desc    Update profile
-// @route   PUT /api/users/profile
 export const updateUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
@@ -173,7 +178,8 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
       mobile: updatedUser.mobile,
       customId: updatedUser.customId,
       image: updatedUser.image,
-      role: updatedUser.role, 
+      role: updatedUser.role,
+      status: updatedUser.status, 
       walletBalance: updatedUser.walletBalance,
       isAdmin: updatedUser.isAdmin,
       isSuperAdmin: updatedUser.isSuperAdmin,
@@ -223,8 +229,9 @@ export const updateUser = asyncHandler(async (req, res) => {
     user.email = req.body.email || user.email;
     user.mobile = req.body.mobile || user.mobile;
     
-    // অ্যাডমিন দ্বারা রোল এবং ব্যালেন্স আপডেট করার অপশন
+    // অ্যাডমিন দ্বারা রোল, স্ট্যাটাস এবং ব্যালেন্স আপডেট
     user.role = req.body.role || user.role;
+    user.status = req.body.status || user.status; // এই লাইনটি টিক/ক্রস বাটনের কাজ নিশ্চিত করবে
     user.walletBalance = req.body.walletBalance || user.walletBalance;
     user.isAdmin = req.body.isAdmin !== undefined ? Boolean(req.body.isAdmin) : user.isAdmin;
     user.isSuperAdmin = req.body.isSuperAdmin !== undefined ? Boolean(req.body.isSuperAdmin) : user.isSuperAdmin;
@@ -242,6 +249,7 @@ export const updateUser = asyncHandler(async (req, res) => {
       customId: updatedUser.customId,
       image: updatedUser.image,
       role: updatedUser.role,
+      status: updatedUser.status,
       walletBalance: updatedUser.walletBalance,
       isAdmin: updatedUser.isAdmin,
       isSuperAdmin: updatedUser.isSuperAdmin,

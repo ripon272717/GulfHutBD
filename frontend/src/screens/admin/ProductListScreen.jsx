@@ -36,16 +36,16 @@ const ProductListScreen = () => {
     useCreateProductMutation();
 
   const createProductHandler = async () => {
-    if (window.confirm('Are you sure you want to create a new product?')) {
-      try {
-        await createProduct();
-        refetch();
-      } catch (err) {
-        toast.error(err?.data?.message || err.error);
-      }
+  if (window.confirm('আপনি কি নতুন একটি প্রোডাক্ট তৈরি করতে চান?')) {
+    try {
+      await createProduct();
+      refetch();
+      toast.success('স্যাম্পল প্রোডাক্ট তৈরি হয়েছে, এখন এডিট করুন।');
+    } catch (err) {
+      toast.error(err?.data?.message || err.error);
     }
-  };
-
+  }
+};
   return (
     <>
       <Row className='align-items-center'>

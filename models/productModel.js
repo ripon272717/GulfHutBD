@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 
+// রিভিউ স্কিমা (এটি প্রোডাক্ট স্কিমার জন্য সাব-ডকুমেন্ট হিসেবে কাজ করবে)
 const reviewSchema = mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -16,12 +17,13 @@ const reviewSchema = mongoose.Schema(
   }
 );
 
+// মেইন প্রোডাক্ট স্কিমা
 const productSchema = mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: 'User',
+      ref: 'User', // কোন অ্যাডমিন প্রোডাক্টটি তৈরি করেছেন
     },
     name: {
       type: String,
@@ -43,7 +45,7 @@ const productSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    reviews: [reviewSchema],
+    reviews: [reviewSchema], // রিভিউর অ্যারে
     rating: {
       type: Number,
       required: true,
@@ -54,17 +56,32 @@ const productSchema = mongoose.Schema(
       required: true,
       default: 0,
     },
-    price: {
+    
+    // --- কারেন্সি এবং শিপিং লজিক ---
+    priceQR: {
       type: Number,
       required: true,
-      default: 0,
+      default: 0, // কাতারি রিয়াল (QR)
     },
+    priceBDT: {
+      type: Number,
+      required: true,
+      default: 0, // বাংলাদেশি টাকা (BDT)
+    },
+    shippingTime: {
+      type: String,
+      required: true,
+      default: '7-15 Days', // কাতার থেকে পৌঁছানোর সময়
+    },
+    // ----------------------------
+
     countInStock: {
       type: Number,
       required: true,
       default: 0,
     },
-    // নতুন ফিল্ডগুলো নিচে কমা দিয়ে যোগ করা হলো
+    
+    // ড্যাশবোর্ড বা হোমে দেখানোর কন্ট্রোল
     showOnHomepage: {
       type: Boolean,
       required: true,
