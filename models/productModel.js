@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-// রিভিউ স্কিমা (এটি প্রোডাক্ট স্কিমার জন্য সাব-ডকুমেন্ট হিসেবে কাজ করবে)
+// রিভিউ স্কিমা
 const reviewSchema = mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -17,21 +17,44 @@ const reviewSchema = mongoose.Schema(
   }
 );
 
+// ভ্যারিয়েন্ট স্কিমা (কালার, সাইজ, স্টক এবং ছবির জন্য)
+const variantSchema = mongoose.Schema({
+  color: { type: String },
+  size: { type: String },
+  stock: { type: Number, default: 0 },
+  image: { type: String }, // এই কালারের নির্দিষ্ট ছবি
+});
+
 // মেইন প্রোডাক্ট স্কিমা
 const productSchema = mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: 'User', // কোন অ্যাডমিন প্রোডাক্টটি তৈরি করেছেন
+      ref: 'User',
     },
     name: {
       type: String,
       required: true,
     },
+    pCode: {
+      type: String,
+      required: true,
+      unique: true, // প্রতিটি প্রোডাক্টের আলাদা কোড থাকবে
+    },
     image: {
       type: String,
       required: true,
+    },
+    images: [
+      {
+        url: { type: String },
+        isMain: { type: Boolean, default: false }
+      }
+    ], // গ্যালারির জন্য মাল্টিপল ইমেজের অ্যারে
+    videoUrl: {
+      type: String,
+      default: '',
     },
     brand: {
       type: String,
@@ -41,11 +64,17 @@ const productSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    offerCategory: {
+      type: String,
+      default: '',
+    },
     description: {
       type: String,
       required: true,
     },
-    reviews: [reviewSchema], // রিভিউর অ্যারে
+    reviews: [reviewSchema],
+    variants: [variantSchema], 
+
     rating: {
       type: Number,
       required: true,
@@ -57,31 +86,50 @@ const productSchema = mongoose.Schema(
       default: 0,
     },
     
-    // --- কারেন্সি এবং শিপিং লজিক ---
+    // প্রাইস সেকশন
+    priceLabel: {
+      type: String,
+      default: 'Price', // যেমন: 3pcs / 2pcs
+    },
     priceQR: {
       type: Number,
       required: true,
-      default: 0, // কাতারি রিয়াল (QR)
+      default: 0,
     },
     priceBDT: {
       type: Number,
       required: true,
-      default: 0, // বাংলাদেশি টাকা (BDT)
+      default: 0,
     },
+
+    // অফার ও বাজ (নতুন যোগ করা হয়েছে)
+    isOfferOn: {
+      type: Boolean,
+      default: false,
+    },
+    offerText: {
+      type: String,
+      default: '',
+    },
+    isBazOn: {
+      type: Boolean,
+      default: false,
+    },
+    bazText: {
+      type: String,
+      default: '',
+    },
+
     shippingTime: {
       type: String,
       required: true,
-      default: '7-15 Days', // কাতার থেকে পৌঁছানোর সময়
+      default: '7-15 Days',
     },
-    // ----------------------------
-
     countInStock: {
       type: Number,
       required: true,
       default: 0,
     },
-    
-    // ড্যাশবোর্ড বা হোমে দেখানোর কন্ট্রোল
     showOnHomepage: {
       type: Boolean,
       required: true,
