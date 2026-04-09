@@ -260,22 +260,31 @@ const ProductEditScreen = () => {
                   </Form.Group>
                 </Card.Body>
               </Card>
-
-              {/* ৪. প্রাইসিং (তোর রিকোয়ারমেন্ট অনুযায়ী কোলন সহ ডাইনামিক প্রিভিউ) */}
+      {/* ৪. প্রাইসিং সেকশন - প্রিভিউ কার্ডের সাথে মিল রেখে */}
               <Card className="border-0 shadow-sm mb-3 rounded-4">
                 <Card.Body>
                   <h6 className="fw-bold mb-3 text-success small"><FaTag className="me-2"/> প্রাইসিং সেটিংস</h6>
                   
-                  {/* প্রিভিউ বক্স */}
+                  {/* প্রিভিউ বক্স: ঠিক যেমনটা প্রোডাক্ট কার্ডে দেখাবে */}
                   <div className="text-center py-2 bg-light rounded border mb-3 shadow-sm border-success">
-                    <strong className="fs-6 text-dark">Price : {priceLabel}</strong>
+                    <strong className="fs-6 text-dark">
+                      Price : ({priceLabel})
+                    </strong>
                   </div>
 
                   <Row className="g-2">
                     <Col xs={4}>
                       <Form.Label className="small fw-bold">ইউনিট</Form.Label>
-                      <Form.Control size="sm" value={priceLabel} onChange={(e) => setPriceLabel(e.target.value)} placeholder="যেমন: 3pcs" />
+                      <Form.Control 
+                        size="sm" 
+                        type="text"
+                        // এখানে শুধু ভ্যালুটা থাকবে, কোনো কোলন বা প্রাইস লেখা ইনপুটে আসবে না
+                        value={priceLabel} 
+                        onChange={(e) => setPriceLabel(e.target.value)} 
+                        placeholder="যেমন: 3pcs" 
+                      />
                     </Col>
+                    {/* বাকি দামের ইনপুটগুলো আগের মতোই থাকবে... */}
                     <Col xs={4}>
                       <Form.Label className="small fw-bold">দাম (QR)</Form.Label>
                       <Form.Control size="sm" type="number" value={priceQR} onChange={(e) => handlePriceQRChange(e.target.value)} />
@@ -287,7 +296,6 @@ const ProductEditScreen = () => {
                   </Row>
                 </Card.Body>
               </Card>
-
               {/* ৫. অফার ও ব্যাজ */}
               <Card className="border-0 shadow-sm mb-3 rounded-4 border-start border-warning border-5">
                 <Card.Body>

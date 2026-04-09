@@ -123,7 +123,7 @@ const Header = () => {
     <header className='fixed-top shadow-sm'>
       <style>{`
         .navbar { background: #212529 !important; height: 75px; border-bottom: 2px solid #ffc107; padding: 0; }
-        .notice-board { background: #ffc107; color: #000; padding: 2px 0; font-weight: bold; font-size: 11px; text-align: center; }
+        .notice-board { background: #ffc107; color: #000; padding: 2px 0; font-weight: bold; font-size: 11px; text-align: center; display: flex; align-items: center; }
         .search-input { border-radius: 20px 0 0 20px !important; border: none; font-size: 13px; height: 35px; }
         .search-btn { border-radius: 0 20px 20px 0 !important; background: #ffc107 !important; color: #000 !important; border: none; height: 35px; }
         .user-name-box { max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white; font-size: 13px; font-weight: bold; line-height: 1.1; }
@@ -152,13 +152,15 @@ const Header = () => {
         .dropdown-submenu:hover .submenu-content { display: block; }
         .dropdown-submenu:hover > span { color: #ffc107 !important; }
         
-        @media (max-width: 991px) { .pc-only { display: none !important; } }
+        @media (max-width: 991px) { 
+          .pc-only { display: none !important; }
+          .user-name-box { max-width: 80px; font-size: 11px; }
+        }
       `}</style>
 
       <Navbar variant='dark'>
         <Container fluid className='px-2 d-flex align-items-center'>
-          <FaBars className='text-white me-2 d-lg-none' style={{fontSize: '22px', cursor: 'pointer'}} onClick={() => setShowSidebar(true)} />
-          
+          {/* PC ও মোবাইল সবখানে ব্র্যান্ড লোগো */}
           <Navbar.Brand onClick={() => navigate('/')} style={{cursor:'pointer'}} className='m-0 p-0 me-2'>
             <img src={logo} alt='logo' width='40'/>
           </Navbar.Brand>
@@ -170,7 +172,6 @@ const Header = () => {
                 <FaHome className='text-warning'/> Home
               </Link>
 
-              {/* PC Category Dropdown with Sub-menu */}
               <NavDropdown 
                 title={<span><FaThList className='text-warning me-1'/> Category</span>} 
                 id="pc-category-dropdown" 
@@ -198,23 +199,19 @@ const Header = () => {
                 ))}
               </NavDropdown>
 
-              <Link 
-                to={isAdmin ? "/admin/dashboard" : "/dashboard"} 
-                className='text-white text-decoration-none small d-flex align-items-center gap-1'
-              >
+              <Link to={isAdmin ? "/admin/dashboard" : "/dashboard"} className='text-white text-decoration-none small d-flex align-items-center gap-1'>
                 <FaChartLine className='text-warning'/> Dashboard
               </Link>
-
               <Link to="/about" className='text-white text-decoration-none small d-flex align-items-center gap-1'>
                 <FaUserPlus className='text-warning'/> About Us
               </Link>
-
               <Link to="/rules" className='text-white text-decoration-none small d-flex align-items-center gap-1'>
                 <FaCheckCircle className='text-warning'/> Discussion
               </Link>
             </Nav>
           </div>
 
+          {/* Search Box */}
           <div className='flex-grow-1 mx-2' style={{maxWidth: '300px'}}>
             <InputGroup size="sm">
               <Form.Control placeholder="Search..." className='search-input shadow-none' />
@@ -222,7 +219,8 @@ const Header = () => {
             </InputGroup>
           </div>
 
-          <div className='d-flex align-items-center ms-2'>
+          {/* Right Side: Profile & Cart */}
+          <div className='d-flex align-items-center ms-auto'>
             <div className='pc-only me-3 position-relative' style={{color:'white', cursor:'pointer'}} onClick={() => navigate('/cart')}>
                 <FaShoppingCart size={22}/>
                 {cartItems.length > 0 && <Badge pill bg='warning' text='dark' style={{position:'absolute', top:'-10px', right:'-10px'}}>{cartItems.length}</Badge>}
@@ -230,11 +228,11 @@ const Header = () => {
 
             {userInfo ? (
               <div className='d-flex align-items-center' onClick={() => setShowProfileModal(true)} style={{cursor:'pointer'}}>
-                <div className='text-end me-2 d-none d-sm-block'>
+                <div className='text-end me-2'>
                   <div className="user-name-box">{userInfo.name}</div>
                   <div style={{color:'#ffc107', fontSize:'11px', fontWeight: 'bold'}}>QR {userInfo.balance || 0}</div>
                 </div>
-                <Image src={userInfo.image || logo} roundedCircle width='38' height='38' style={{border: '2px solid #ffc107', objectFit:'cover'}} />
+                <Image src={userInfo.image || logo} roundedCircle width='35' height='35' style={{border: '2px solid #ffc107', objectFit:'cover'}} />
               </div>
             ) : (
               <Button size='sm' variant='warning' className='rounded-pill px-3 fw-bold' onClick={() => navigate('/login')}>Login</Button>
@@ -243,7 +241,13 @@ const Header = () => {
         </Container>
       </Navbar>
 
-      <div className="notice-board"><marquee scrollamount="5">Fastest shipping from Qatar to Bangladesh - Gulf Hut</marquee></div>
+      {/* Notice Board with Mobile Menu Icon on the Left */}
+      <div className="notice-board">
+        <div className="d-lg-none px-2 border-end border-dark" onClick={() => setShowSidebar(true)} style={{cursor: 'pointer'}}>
+          <FaBars size={18} />
+        </div>
+        <marquee scrollamount="5" className="flex-grow-1">Fastest shipping from Qatar to Bangladesh - Gulf Hut</marquee>
+      </div>
 
       {/* Mobile Sidebar (Offcanvas) */}
       <Offcanvas show={showSidebar} onHide={() => setShowSidebar(false)} placement='start'>
@@ -255,7 +259,6 @@ const Header = () => {
             <FaHome className='text-warning'/> Home
           </Link>
 
-          {/* Mobile Category Dropdown with Sub-items */}
           <NavDropdown 
             title={<span><FaThList className='text-warning me-2'/> Categories</span>} 
             className='offcanvas-link text-white w-100' 
@@ -282,15 +285,12 @@ const Header = () => {
           <Link to={isAdmin ? "/admin/dashboard" : "/dashboard"} className='offcanvas-link' onClick={() => setShowSidebar(false)}>
             <FaChartLine className='text-warning'/> Dashboard
           </Link>
-
           <Link to="/about" className='offcanvas-link' onClick={() => setShowSidebar(false)}>
             <FaUserPlus className='text-warning'/> About Us
           </Link>
-
           <Link to="/rules" className='offcanvas-link' onClick={() => setShowSidebar(false)}>
             <FaCheckCircle className='text-warning'/> Rules & Discussion
           </Link>
-
           <Link to="/cart" className='offcanvas-link' onClick={() => setShowSidebar(false)}>
             <FaShoppingCart className='text-warning'/> My Cart ({cartItems.length})
           </Link>
@@ -437,11 +437,9 @@ const Header = () => {
         <div onClick={() => navigate('/')} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
           <FaHome size={20} style={{color: location.pathname === '/' ? '#ffc107' : 'white'}}/><br/>Home
         </div>
-
         <div onClick={() => navigate('/category')} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
           <FaThList size={20} style={{color: location.pathname === '/category' ? '#ffc107' : 'white'}}/><br/>Category
         </div>
-
         <div onClick={() => navigate(isAdmin ? '/admin/dashboard' : '/dashboard')} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
           <div style={{
             background: '#ffc107', width: '45px', height: '45px', borderRadius: '50%', 
@@ -452,11 +450,9 @@ const Header = () => {
           </div>
           Dashboard
         </div>
-
         <div onClick={() => navigate('/contact')} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
           <FaUserPlus size={20} style={{color: location.pathname === '/contact' ? '#ffc107' : 'white'}}/><br/>Contact
         </div>
-       
         <div onClick={() => setShowProfileModal(true)} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
           <div className="position-relative d-inline-block">
             <FaUserCircle size={20} style={{color: showProfileModal ? '#ffc107' : 'white'}}/>

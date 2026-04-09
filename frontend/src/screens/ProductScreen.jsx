@@ -227,20 +227,66 @@ const ProductScreen = () => {
                 </ListGroup.Item>
 
                 {/* কার্ট সেকশন কার্ড */}
-                <ListGroup.Item className='border-0 mt-4'>
+                  <ListGroup.Item className='border-0 mt-4'>
                   <Card className='border-0 bg-white p-4 rounded-4 shadow-sm border'>
+                    {/* স্টক স্ট্যাটাস */}
                     <Row className='align-items-center mb-4'>
                       <Col className='fw-bold'>স্টক স্ট্যাটাস:</Col>
                       <Col className='text-end'>
-                        {product.countInStock > 0 ? <Badge bg='success' className="rounded-pill px-3 py-2">In Stock</Badge> : <Badge bg='danger' className="rounded-pill px-3 py-2">Out of Stock</Badge>}
+                        {product.countInStock > 0 ? (
+                          <Badge bg='success' className="rounded-pill px-3 py-2">In Stock</Badge>
+                        ) : (
+                          <Badge bg='danger' className="rounded-pill px-3 py-2">Out of Stock</Badge>
+                        )}
                       </Col>
                     </Row>
-                    
+
+                    {/* সাইজ সিলেকশন সেকশন - স্টক থাকলে দেখাবে */}
+                    {product.countInStock > 0 && product.sizes && product.sizes.length > 0 && (
+                      <div className="mb-4">
+                        {/* সাইজ বাটনগুলো উপরে */}
+                        <div className="d-flex flex-wrap mb-2">
+                          {product.sizes.map((s) => (
+                            <Button
+                              key={s}
+                              variant={selectedSize === s ? 'dark' : 'outline-secondary'}
+                              className="me-2 mb-2 d-flex align-items-center justify-content-center"
+                              onClick={() => setSelectedSize(s)}
+                              style={{ 
+                                minWidth: '50px',
+                                borderRadius: '8px',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                border: selectedSize === s ? '2px solid #ffc107' : '1px solid #ddd',
+                                backgroundColor: selectedSize === s ? '#212529' : 'transparent',
+                                color: selectedSize === s ? '#ffc107' : '#666',
+                                transition: '0.3s'
+                              }}
+                            >
+                              {s}
+                              {selectedSize === s && <FaCheckCircle className="ms-1" style={{ color: '#ffc107' }} />}
+                            </Button>
+                          ))}
+                        </div>
+                        
+                        {/* লেখাটা নিচে */}
+                        <div className="fw-bold" style={{ fontSize: '14px', color: '#333' }}>
+                          Select Your Size
+                        </div>
+                      </div>
+                    )}
+
+                    {/* পরিমাণ (Qty) */}
                     {product.countInStock > 0 && (
                       <Row className='align-items-center mb-4'>
                         <Col className='fw-bold'>পরিমাণ (Qty):</Col>
                         <Col>
-                          <Form.Control as='select' value={qty} onChange={(e) => setQty(Number(e.target.value))} className='rounded-pill border shadow-sm'>
+                          <Form.Control 
+                            as='select' 
+                            value={qty} 
+                            onChange={(e) => setQty(Number(e.target.value))} 
+                            className='rounded-pill border shadow-sm'
+                          >
                             {[...Array(product.countInStock).keys()].map((x) => (
                               <option key={x + 1} value={x + 1}>{x + 1}</option>
                             ))}
@@ -249,20 +295,20 @@ const ProductScreen = () => {
                       </Row>
                     )}
 
+                    {/* অ্যাড টু কার্ট বাটন */}
                     <Button
                       onClick={addToCartHandler}
                       className='btn-block py-3 rounded-pill fw-bold shadow border-0 text-uppercase'
                       type='button'
                       variant='warning'
-                      disabled={product.countInStock === 0}
+                      disabled={product.countInStock === 0 || (product.sizes?.length > 0 && !selectedSize)}
                       style={{ letterSpacing: '1px' }}
                     >
                       <FaShoppingCart className='me-2' /> 
-                      {selectedSize ? 'ব্যাগে যোগ করুন' : 'সাইজ সিলেক্ট করুন'}
+                      {product.countInStock === 0 ? 'স্টক আউট' : (selectedSize || product.sizes?.length === 0 ? 'ব্যাগে যোগ করুন' : 'সাইজ সিলেক্ট করুন')}
                     </Button>
                   </Card>
                 </ListGroup.Item>
-
                 {/* অ্যাডমিন সেকশন */}
                 {userInfo && userInfo.isAdmin && (
                   <ListGroup.Item className='border-0 mt-2'>

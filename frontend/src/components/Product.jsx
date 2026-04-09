@@ -4,7 +4,7 @@ import Rating from './Rating';
 import { FaHashtag } from 'react-icons/fa';
 
 const Product = ({ product }) => {
-  // মেইন ইমেজ সিলেক্ট করার লজিক (images অ্যারে থাকলে সেখান থেকে নেয়)
+  // মেইন ইমেজ সিলেক্ট করার লজিক (images অ্যারে থাকলে সেখান থেকে নেয়)
   const mainImage = product.images && product.images.length > 0 
     ? (product.images.find(img => img.isMain)?.url || product.images[0].url) 
     : product.image;
@@ -79,9 +79,9 @@ const Product = ({ product }) => {
           </span>
         </div>
 
-        {/* ৪. ডাইনামিক প্রাইস লেবেল (যেমন: 3pcs বা 2pcs যা তুই অ্যাডমিনে লিখবি) */}
+        {/* ৪. ডাইনামিক প্রাইস লেবেল (তোর স্ক্রিনশট অনুযায়ী ফিক্সড ফরম্যাট) */}
         <div className="mb-2" style={{ fontSize: '12px', fontWeight: '500', color: '#444' }}>
-          {product.priceLabel || 'Price'} : <span className="text-muted">({product.countInStock > 0 ? (product.priceLabel === 'Price' ? '1pcs' : product.priceLabel) : '0pcs'})</span>
+          Price : <span style={{ color: '#666' }}>({product.priceLabel || '1pcs'})</span>
         </div>
 
         {/* ৫. প্রাইস এবং বাটন সেকশন */}
