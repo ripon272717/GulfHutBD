@@ -5,6 +5,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Row, Col, Image, ListGroup, Card, Button, Form, Badge, Modal, Table } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap'; 
 import { toast } from 'react-toastify';
+// --- UPDATE: ReactPlayer ইম্পোর্ট করা হয়েছে ---
+import ReactPlayer from 'react-player'; 
 import { 
   FaEdit, 
   FaArrowLeft, 
@@ -35,7 +37,7 @@ const ProductScreen = () => {
   const [comment, setComment] = useState('');
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   
-  // --- ডাইনামিক ভ্যারিয়েন্ট স্টেট ---
+  // --- ডাইনামিক ভ্যারিয়েন্ট স্টেট ---
   const [activeImgIdx, setActiveImgIdx] = useState(0); 
   const [selectedSize, setSelectedSize] = useState('');
 
@@ -51,10 +53,13 @@ const ProductScreen = () => {
 
   const addToCartHandler = () => {
     const activeImage = product.images && product.images.length > 0 ? product.images[activeImgIdx] : null;
-    const hasVariants = activeImage?.variants && activeImage.variants.length > 0;
+    
+    // --- UPDATE: এখানে তোর মেইন ভ্যারিয়েন্ট লজিকটা আরও মজবুত করা হয়েছে ---
+    const currentVariants = product.variants && product.variants.length > 0 ? product.variants : (activeImage?.variants || []);
+    const hasVariants = currentVariants.length > 0;
     
     if (hasVariants && !selectedSize) {
-      toast.error('দয়া করে একটি সাইজ সিলেক্ট করুন');
+      toast.error('দয়া করে একটি সাইজ সিলেক্ট করুন');
       return;
     }
     
@@ -62,7 +67,7 @@ const ProductScreen = () => {
       ...product,
       qty,
       image: activeImage ? activeImage.url : product.image,
-      color: activeImage?.variants[0]?.color || 'Default',
+      color: currentVariants.find(v => v.size === selectedSize)?.color || 'Default',
       size: selectedSize || 'N/A'
     };
 
@@ -75,7 +80,7 @@ const ProductScreen = () => {
     try {
       await createReview({ productId, rating, comment }).unwrap();
       refetch();
-      toast.success('রিভিউটি সফলভাবে যোগ করা হয়েছে');
+      toast.success('রিভিউটি সফলভাবে যোগ করা হয়েছে');
       setRating(0);
       setComment('');
     } catch (err) {
@@ -112,7 +117,7 @@ const ProductScreen = () => {
   return (
     <>
       <Link className='btn btn-light my-3 border shadow-sm rounded-pill px-4' to='/'>
-        <FaArrowLeft className='me-2' /> শপিং চালিয়ে যান
+        <FaArrowLeft className='me-2' /> শপিং চালিয়ে যান
       </Link>
 
       {isLoading ? (
@@ -146,10 +151,19 @@ const ProductScreen = () => {
                   style={{ maxHeight: '550px', minHeight: '400px' }}
                 />
 
-                {/* ভিডিও গাইড ছোট উইন্ডো */}
+                {/* --- UPDATE: ভিডিও গাইড ছোট উইন্ডো (তোর ডিমান্ড অনুযায়ী ReactPlayer দিয়ে আপডেট) --- */}
                 {product.videoUrl && (
-                  <div className="position-absolute bottom-0 end-0 m-3 border border-white shadow-lg rounded-3 overflow-hidden bg-black" style={{ width: '110px', height: '110px' }}>
-                    <video src={product.videoUrl} autoPlay loop muted playsInline className="w-100 h-100 object-fit-cover" />
+                  <div className="position-absolute bottom-0 end-0 m-3 border border-white shadow-lg rounded-3 overflow-hidden bg-black" style={{ width: '110px', height: '110px', zIndex: 100 }}>
+                     <ReactPlayer 
+                      url={product.videoUrl} 
+                      width="100%" 
+                      height="100%" 
+                      playing 
+                      muted 
+                      loop 
+                      playsinline
+                      controls={false}
+                    />
                   </div>
                 )}
               </div>
@@ -205,11 +219,12 @@ const ProductScreen = () => {
                   <div className='d-flex justify-content-between align-items-center mb-3'>
                     <strong className='text-uppercase small fw-bold text-secondary'>সাইজ বেছে নিন:</strong>
                     <Button variant='link' size='sm' className='text-decoration-none text-muted p-0 fw-bold' onClick={() => setShowSizeGuide(true)}>
-                       <FaRulerCombined className='me-1 text-primary'/> সাইজ চার্ট
+                        <FaRulerCombined className='me-1 text-primary'/> সাইজ চার্ট
                     </Button>
                   </div>
                   <div className='d-flex flex-wrap gap-2'>
-                    {product.images && product.images[activeImgIdx]?.variants?.map((v, idx) => (
+                    {/* --- UPDATE: ভ্যারিয়েন্ট লজিক চেক --- */}
+                    {(product.variants || product.images[activeImgIdx]?.variants)?.map((v, idx) => (
                       <Button 
                         key={idx} 
                         variant={selectedSize === v.size ? 'dark' : 'outline-dark'} 
@@ -220,7 +235,7 @@ const ProductScreen = () => {
                         {v.size} {v.stock <= 0 && '(Stock Out)'}
                       </Button>
                     ))}
-                    {(!product.images || !product.images[activeImgIdx]?.variants || product.images[activeImgIdx]?.variants.length === 0) && (
+                    {(!product.variants && (!product.images || !product.images[activeImgIdx]?.variants || product.images[activeImgIdx]?.variants.length === 0)) && (
                       <span className='text-muted small italic'>এই ভ্যারিয়েন্টের জন্য কোনো নির্দিষ্ট সাইজ নেই</span>
                     )}
                   </div>
@@ -355,7 +370,7 @@ const ProductScreen = () => {
                 ))}
                 
                 <ListGroup.Item className='mt-4 border-0 p-0'>
-                  <h4 className='fw-bold mb-3'>আপনার মতামত শেয়ার করুন</h4>
+                  <h4 className='fw-bold mb-3'>আপনার মতামত শেয়ার করুন</h4>
                   {loadingProductReview && <Loader />}
                   {userInfo ? (
                     <Form onSubmit={submitHandler} className='bg-light p-4 rounded-4 shadow-sm border border-white'>
@@ -377,7 +392,7 @@ const ProductScreen = () => {
                       <Button disabled={loadingProductReview} type='submit' variant='dark' className='w-100 rounded-pill py-2 fw-bold'>রিভিউ সাবমিট করুন</Button>
                     </Form>
                   ) : (
-                    <Message>রিভিউ দিতে দয়া করে <Link to='/login' className='fw-bold'>লগইন</Link> করুন।</Message>
+                    <Message>রিভিউ দিতে দয়া করে <Link to='/login' className='fw-bold'>লগইন</Link> করুন।</Message>
                   )}
                 </ListGroup.Item>
               </ListGroup>

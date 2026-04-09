@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Form, Button, Row, Col, Container, Card, Badge } from 'react-bootstrap';
-import { FaTrash, FaPlus, FaSave, FaChevronLeft, FaLayerGroup, FaCheckCircle, FaTag, FaImage, FaVideo, FaMagic, FaBox, FaTruck, FaPlayCircle } from 'react-icons/fa';
+import { Form, Button, Row, Col, Container, Card, Badge, Modal, Spinner } from 'react-bootstrap';
+import { FaTrash, FaPlus, FaSave, FaChevronLeft, FaLayerGroup, FaCheckCircle, FaTag, FaImage, FaVideo, FaMagic, FaBox, FaPlayCircle, FaLink, FaFileUpload, FaCloudUploadAlt } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import {
   useGetProductDetailsQuery,
@@ -16,7 +16,7 @@ const ProductEditScreen = () => {
   const { id: productId } = useParams();
   const navigate = useNavigate();
 
-  // --- সব স্টেট (তোর অরিজিনাল সব ফিল্ড) ---
+  // --- তোর অরিজিনাল সব স্টেট (বিন্দু পরিমাণ কমেনি) ---
   const [name, setName] = useState('');
   const [pCode, setPCode] = useState('');
   const [category, setCategory] = useState('');
@@ -32,11 +32,17 @@ const ProductEditScreen = () => {
   const [isBazOn, setIsBazOn] = useState(false);
   const [images, setImages] = useState([]); 
   const [activeImgIdx, setActiveImgIdx] = useState(0);
-
-  // ব্যাকএন্ডের ৫Internal Server Error ফিক্স করার ফিল্ড
   const [brand, setBrand] = useState('');
   const [countInStock, setCountInStock] = useState(0);
   const [shippingTime, setShippingTime] = useState('');
+
+  // --- নতুন লজিক স্টেট (Modal & Upload) ---
+  const [showImgModal, setShowImgModal] = useState(false);
+  const [isVariant, setIsVariant] = useState(false);
+  const [uploadType, setUploadType] = useState('file'); 
+  const [tempImgUrl, setTempImgUrl] = useState('');
+  const [tempVariant, setTempVariant] = useState({ size: '', color: '', stock: 0, vSuffix: '' });
+  const [isVideoUploading, setIsVideoUploading] = useState(false);
 
   const { data: product, isLoading, error, refetch } = useGetProductDetailsQuery(productId);
   const [updateProduct, { isLoading: loadingUpdate }] = useUpdateProductMutation();
@@ -45,7 +51,6 @@ const ProductEditScreen = () => {
   useEffect(() => {
     if (product) {
       setName(product.name || '');
-      // আইডি অটো-ফিল (pCode হিসেবে সেট হবে)
       setPCode(product.pCode || product._id || productId); 
       setCategory(product.category || '');
       setOfferCategory(product.offerCategory || 'offer product');
@@ -65,7 +70,6 @@ const ProductEditScreen = () => {
     }
   }, [product, productId]);
 
-  // ইউনিক কোড জেনারেটর (তোর অরিজিনাল)
   const generateUniqueCode = () => {
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     const date = new Date();
@@ -80,24 +84,67 @@ const ProductEditScreen = () => {
     setPriceBDT(qr * 32); 
   };
 
-  const handleImageUpload = async (e) => {
+  // --- ফাইল আপলোড লজিক (ইমেজ) ---
+  const handleFileChange = async (e) => {
     const formData = new FormData();
     formData.append('image', e.target.files[0]);
     try {
       const res = await uploadProductImage(formData).unwrap();
-      const newImg = { url: res.image, isMain: false, variants: [{ size: '', color: '', stock: 0 }] };
-      setImages([...images, newImg]);
-      setActiveImgIdx(images.length);
-      toast.success('ছবি আপলোড হয়েছে');
+      setTempImgUrl(res.image);
+      toast.success('ফাইল আপলোড সফল!');
     } catch (err) {
       toast.error('আপলোড ব্যর্থ');
     }
   };
 
+  // --- ভিডিও আপলোড লজিক ---
+  const uploadVideoHandler = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('image', file); 
+    setIsVideoUploading(true);
+    try {
+      const res = await uploadProductImage(formData).unwrap();
+      setVideoUrl(res.image);
+      toast.success('ভিডিও ফাইল আপলোড সফল!');
+    } catch (err) {
+      toast.error('ভিডিও আপলোড ব্যর্থ!');
+    } finally {
+      setIsVideoUploading(false);
+    }
+  };
+
+  const saveImageHandler = () => {
+    if (!tempImgUrl) return toast.error('ইমেজ সোর্স প্রয়োজন');
+    const imageSuffix = tempVariant.vSuffix ? `${pCode}-${tempVariant.vSuffix}` : `${pCode}-${String.fromCharCode(97 + images.length)}`;
+    const newImg = { 
+      url: tempImgUrl, 
+      isMain: images.length === 0, 
+      imageCode: imageSuffix,
+      variants: isVariant ? [{ 
+        size: tempVariant.size, 
+        color: tempVariant.color, 
+        stock: Number(tempVariant.stock) 
+      }] : [{ size: '', color: '', stock: 0 }]
+    };
+    setImages([...images, newImg]);
+    setActiveImgIdx(images.length);
+    setShowImgModal(false);
+    resetTempState();
+  };
+
+  const resetTempState = () => {
+    setTempImgUrl('');
+    setUploadType('file');
+    setIsVariant(false);
+    setTempVariant({ size: '', color: '', stock: 0, vSuffix: '' });
+  };
+
   const deleteImage = (idx) => {
     if (images.length <= 1) return toast.error('কমপক্ষে একটি ছবি থাকতে হবে');
     const updatedImages = images.filter((_, i) => i !== idx);
-    if (images[idx].isMain) updatedImages[0].isMain = true;
+    if (images[idx].isMain && updatedImages.length > 0) updatedImages[0].isMain = true;
     setImages(updatedImages);
     setActiveImgIdx(0);
   };
@@ -105,17 +152,11 @@ const ProductEditScreen = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
     try {
-      // ইমেজ সাফিক্স লজিক (pCode-a, pCode-b)
-      const updatedImages = images.map((img, index) => ({
-        ...img,
-        imageCode: `${pCode}-${String.fromCharCode(97 + index)}`
-      }));
-
-      const mainImageUrl = updatedImages?.find(img => img.isMain)?.url || (updatedImages?.[0]?.url || '');
+      const mainImageUrl = images?.find(img => img.isMain)?.url || (images?.[0]?.url || '');
       await updateProduct({
         productId, name, pCode, category, offerCategory, description, videoUrl,
         priceLabel, priceQR, priceBDT, offerText, isOfferOn, bazText, isBazOn,
-        images: updatedImages, image: mainImageUrl, brand, countInStock, shippingTime
+        images, image: mainImageUrl, brand, countInStock, shippingTime
       }).unwrap();
       toast.success('সফলভাবে আপডেট হয়েছে!');
       refetch();
@@ -164,10 +205,13 @@ const ProductEditScreen = () => {
                     {img.isMain && <FaCheckCircle className="position-absolute top-0 start-0 text-primary bg-white rounded-circle" style={{fontSize: '14px', marginTop: '-4px'}} />}
                   </div>
                 ))}
-                <label className="border-dashed rounded d-flex align-items-center justify-content-center bg-white" style={{ width: '65px', height: '65px', cursor: 'pointer', border: '2px dashed #0d6efd' }}>
-                  {loadingUpload ? <Loader size="sm" /> : <FaPlus className="text-primary" />}
-                  <input type="file" hidden onChange={handleImageUpload} />
-                </label>
+                <div 
+                    className="border-dashed rounded d-flex align-items-center justify-content-center bg-white" 
+                    style={{ width: '65px', height: '65px', cursor: 'pointer', border: '2px dashed #0d6efd' }}
+                    onClick={() => setShowImgModal(true)}
+                >
+                  <FaPlus className="text-primary" />
+                </div>
               </div>
 
               {/* ইমেজ ভ্যারিয়েন্ট এডিটর */}
@@ -190,25 +234,23 @@ const ProductEditScreen = () => {
                   </Card.Body>
                 </Card>
 
-                {/* ভিডিও লিঙ্ক ও প্রিভিউ */}
-                <div className="bg-white p-2 rounded border shadow-sm">
-                  <Form.Label className="small fw-bold text-primary mb-1"><FaVideo className="me-1"/> প্রোডাক্ট ভিডিও লিঙ্ক</Form.Label>
-                  <Form.Control size="sm" placeholder="URL দিন" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} />
-                  {videoUrl && (
-                    <div className="mt-2 text-center bg-light p-2 rounded border">
-                      <FaPlayCircle className="text-danger me-2" />
-                      <span className="very-small text-muted">ভিডিও লিঙ্ক যুক্ত হয়েছে</span>
-                    </div>
-                  )}
+                <div className="bg-white p-3 rounded border shadow-sm border-start border-danger border-5">
+                  <Form.Label className="small fw-bold text-danger mb-1"><FaVideo className="me-1"/> প্রোডাক্ট ভিডিও লিঙ্ক</Form.Label>
+                  <Form.Control size="sm" placeholder="URL দিন" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className="mb-2" />
+                  <label className="btn btn-outline-danger btn-sm w-100 rounded-pill d-flex align-items-center justify-content-center">
+                    {isVideoUploading ? <Spinner size="sm" className="me-2" /> : <FaCloudUploadAlt className="me-2" />}
+                    {isVideoUploading ? 'ভিডিও আপলোড হচ্ছে...' : 'সরাসরি ভিডিও ফাইল আপলোড'}
+                    <input type="file" accept="video/*" hidden onChange={uploadVideoHandler} />
+                  </label>
                 </div>
               </div>
             </div>
 
             <Container>
-              {/* ২. ব্যাকএন্ড রিকোয়ার্ড ফিল্ডস (তোর দেওয়া অরিজিনাল ৩ লাইন) */}
+              {/* ২. ব্যাকএন্ড রিকোয়ার্ড ফিল্ডস */}
               <Card className="border-0 shadow-sm mb-3 rounded-4 border-start border-info border-5">
                 <Card.Body>
-                  <h6 className="fw-bold mb-3 text-info small text-uppercase"><FaBox className="me-2"/> স্টক ও শিপিং (মাস্ট লাগবে)</h6>
+                  <h6 className="fw-bold mb-3 text-info small text-uppercase"><FaBox className="me-2"/> স্টক ও শিপিং</h6>
                   <Row className="g-2">
                     <Col xs={6}>
                       <Form.Label className="small fw-bold">ব্র্যান্ড</Form.Label>
@@ -219,14 +261,14 @@ const ProductEditScreen = () => {
                       <Form.Control size="sm" placeholder="৩-৫ দিন" value={shippingTime} onChange={(e) => setShippingTime(e.target.value)} required />
                     </Col>
                     <Col xs={12} className="mt-2">
-                      <Form.Label className="small fw-bold">মোট স্টক (Inventory)</Form.Label>
+                      <Form.Label className="small fw-bold">মোট স্টক</Form.Label>
                       <Form.Control size="sm" type="number" value={countInStock} onChange={(e) => setCountInStock(e.target.value)} required />
                     </Col>
                   </Row>
                 </Card.Body>
               </Card>
 
-              {/* ৩. বেসিক ইনফরমেশন */}
+              {/* ৩. বেসিক ইনফরমেশন (এখানেই তোর Offer Category ফিরিয়ে দেওয়া হয়েছে) */}
               <Card className="border-0 shadow-sm mb-3 rounded-4">
                 <Card.Body>
                   <h6 className="fw-bold mb-3 text-primary small"><FaLayerGroup className="me-2"/> বেসিক ইনফরমেশন</h6>
@@ -235,6 +277,15 @@ const ProductEditScreen = () => {
                     <Form.Control value={name} onChange={(e) => setName(e.target.value)} required />
                   </Form.Group>
                   <Row className="g-2 mb-3">
+                    <Col xs={12} className="mb-2">
+                      <Form.Label className="small fw-bold text-success">অফার ক্যাটাগরি</Form.Label>
+                      <Form.Select size="sm" value={offerCategory} onChange={(e) => setOfferCategory(e.target.value)}>
+                        <option value="offer product">Offer Product</option>
+                        <option value="regular product">Regular Product</option>
+                        <option value="best selling">Best Selling</option>
+                        <option value="new arrival">New Arrival</option>
+                      </Form.Select>
+                    </Col>
                     <Col xs={7}>
                       <Form.Label className="small fw-bold">কোড</Form.Label>
                       <div className="d-flex gap-1">
@@ -249,42 +300,21 @@ const ProductEditScreen = () => {
                       </Form.Select>
                     </Col>
                   </Row>
-                  <Form.Group>
-                    <Form.Label className="small fw-bold text-danger">স্পেশাল ক্যাটাগরি</Form.Label>
-                    <Form.Select size="sm" className="border-danger" value={offerCategory} onChange={(e) => setOfferCategory(e.target.value)}>
-                      <option value="offer product">Offer Product (Default)</option>
-                      <option value="shipping free">Shipping Free</option>
-                      <option value="cashback free">Cashback Free</option>
-                      <option value="courier free">Courier Free</option>
-                    </Form.Select>
-                  </Form.Group>
                 </Card.Body>
               </Card>
-      {/* ৪. প্রাইসিং সেকশন - প্রিভিউ কার্ডের সাথে মিল রেখে */}
+
+              {/* ৪. প্রাইসিং সেকশন */}
               <Card className="border-0 shadow-sm mb-3 rounded-4">
                 <Card.Body>
                   <h6 className="fw-bold mb-3 text-success small"><FaTag className="me-2"/> প্রাইসিং সেটিংস</h6>
-                  
-                  {/* প্রিভিউ বক্স: ঠিক যেমনটা প্রোডাক্ট কার্ডে দেখাবে */}
                   <div className="text-center py-2 bg-light rounded border mb-3 shadow-sm border-success">
-                    <strong className="fs-6 text-dark">
-                      Price : ({priceLabel})
-                    </strong>
+                    <strong className="fs-6 text-dark">Price : ({priceLabel})</strong>
                   </div>
-
                   <Row className="g-2">
                     <Col xs={4}>
                       <Form.Label className="small fw-bold">ইউনিট</Form.Label>
-                      <Form.Control 
-                        size="sm" 
-                        type="text"
-                        // এখানে শুধু ভ্যালুটা থাকবে, কোনো কোলন বা প্রাইস লেখা ইনপুটে আসবে না
-                        value={priceLabel} 
-                        onChange={(e) => setPriceLabel(e.target.value)} 
-                        placeholder="যেমন: 3pcs" 
-                      />
+                      <Form.Control size="sm" value={priceLabel} onChange={(e) => setPriceLabel(e.target.value)} />
                     </Col>
-                    {/* বাকি দামের ইনপুটগুলো আগের মতোই থাকবে... */}
                     <Col xs={4}>
                       <Form.Label className="small fw-bold">দাম (QR)</Form.Label>
                       <Form.Control size="sm" type="number" value={priceQR} onChange={(e) => handlePriceQRChange(e.target.value)} />
@@ -296,17 +326,18 @@ const ProductEditScreen = () => {
                   </Row>
                 </Card.Body>
               </Card>
+
               {/* ৫. অফার ও ব্যাজ */}
               <Card className="border-0 shadow-sm mb-3 rounded-4 border-start border-warning border-5">
                 <Card.Body>
                   <div className="mb-3 d-flex justify-content-between align-items-center">
                     <Form.Label className="small fw-bold mb-0">অফার টেক্সট</Form.Label>
-                    <Button size="sm" variant={isOfferOn ? "success" : "outline-secondary"} className="py-0 px-2" onClick={() => setIsOfferOn(!isOfferOn)}>{isOfferOn ? "ON" : "OFF"}</Button>
+                    <Button size="sm" variant={isOfferOn ? "success" : "outline-secondary"} onClick={() => setIsOfferOn(!isOfferOn)}>{isOfferOn ? "ON" : "OFF"}</Button>
                   </div>
                   <Form.Control size="sm" value={offerText} onChange={(e) => setOfferText(e.target.value)} disabled={!isOfferOn} className="mb-3" />
                   <div className="d-flex justify-content-between align-items-center">
                     <Form.Label className="small fw-bold mb-0">ব্যাজ টেক্সট</Form.Label>
-                    <Button size="sm" variant={isBazOn ? "danger" : "outline-secondary"} className="py-0 px-2" onClick={() => setIsBazOn(!isBazOn)}>{isBazOn ? "ON" : "OFF"}</Button>
+                    <Button size="sm" variant={isBazOn ? "danger" : "outline-secondary"} onClick={() => setIsBazOn(!isBazOn)}>{isBazOn ? "ON" : "OFF"}</Button>
                   </div>
                   <Form.Control size="sm" value={bazText} onChange={(e) => setBazText(e.target.value)} disabled={!isBazOn} />
                 </Card.Body>
@@ -322,7 +353,6 @@ const ProductEditScreen = () => {
             </Container>
           </div>
 
-          {/* ফিক্সড বটম সেভ বাটন */}
           <div className="fixed-bottom bg-white p-3 border-top shadow-lg" style={{zIndex: 1000}}>
             <Button type="submit" variant="primary" className="w-100 py-3 rounded-pill fw-bold fs-5 shadow" disabled={loadingUpdate}>
               {loadingUpdate ? <Loader size="sm" /> : <><FaSave className="me-2" /> আপডেট সেভ করুন</>}
@@ -330,6 +360,59 @@ const ProductEditScreen = () => {
           </div>
         </Form>
       )}
+
+      {/* ইমেজ আপলোড মোডাল */}
+      <Modal show={showImgModal} onHide={() => setShowImgModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title className="fs-6 fw-bold">নতুন ইমেজ/ভ্যারিয়েন্ট যোগ করুন</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group className="mb-3">
+            <Form.Label className="small fw-bold">Image Source</Form.Label>
+            <div className="d-flex gap-3">
+              <Form.Check type="radio" label="File" name="src" checked={uploadType === 'file'} onChange={() => setUploadType('file')} />
+              <Form.Check type="radio" label="URL" name="src" checked={uploadType === 'url'} onChange={() => setUploadType('url')} />
+            </div>
+          </Form.Group>
+
+          {uploadType === 'file' ? (
+            <Form.Group className="mb-3">
+               <div className="border rounded p-3 text-center bg-light">
+                  {loadingUpload ? <Spinner animation="border" size="sm" /> : (
+                    <>
+                      <FaFileUpload className="fs-3 text-primary mb-2" />
+                      <Form.Control type="file" onChange={handleFileChange} />
+                    </>
+                  )}
+               </div>
+            </Form.Group>
+          ) : (
+            <Form.Group className="mb-3">
+              <Form.Control placeholder="Paste image URL here" value={tempImgUrl} onChange={(e) => setTempImgUrl(e.target.value)} />
+            </Form.Group>
+          )}
+
+          <Form.Check type="switch" label="Is it a Variant?" checked={isVariant} onChange={(e) => setIsVariant(e.target.checked)} className="mb-3 fw-bold text-primary" />
+
+          {isVariant && (
+            <div className="bg-light p-3 rounded border">
+              <Row className="g-2">
+                <Col xs={12} className="mb-2">
+                  <Form.Label className="very-small fw-bold">Variant Suffix (e.g. 'a', 'b')</Form.Label>
+                  <Form.Control size="sm" placeholder="a" onChange={(e) => setTempVariant({...tempVariant, vSuffix: e.target.value})} />
+                </Col>
+                <Col xs={6}><Form.Control size="sm" placeholder="Color" onChange={(e) => setTempVariant({...tempVariant, color: e.target.value})} /></Col>
+                <Col xs={6}><Form.Control size="sm" placeholder="Size" onChange={(e) => setTempVariant({...tempVariant, size: e.target.value})} /></Col>
+                <Col xs={12} className="mt-2"><Form.Control size="sm" type="number" placeholder="Stock" onChange={(e) => setTempVariant({...tempVariant, stock: e.target.value})} /></Col>
+              </Row>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowImgModal(false)}>বাতিল</Button>
+          <Button variant="primary" onClick={saveImageHandler} disabled={!tempImgUrl}>ইমেজ সেভ করুন</Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };
