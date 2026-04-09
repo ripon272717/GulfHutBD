@@ -161,9 +161,13 @@ const Header = () => {
       <Navbar variant='dark'>
         <Container fluid className='px-2 d-flex align-items-center'>
           {/* PC ও মোবাইল সবখানে ব্র্যান্ড লোগো */}
-          <Navbar.Brand onClick={() => navigate('/')} style={{cursor:'pointer'}} className='m-0 p-0 me-2'>
-            <img src={logo} alt='logo' width='40'/>
-          </Navbar.Brand>
+          <Navbar.Brand 
+  onClick={() => window.location.href = '/'} 
+  style={{cursor:'pointer'}} 
+  className='m-0 p-0 me-2'
+>
+  <img src={logo} alt='logo' width='40' />
+</Navbar.Brand>
 
           {/* PC Menu (Left Side) */}
           <div className='pc-only me-auto'>
@@ -428,43 +432,80 @@ const Header = () => {
         </Modal.Body>
       </Modal>
 
-      {/* Mobile Bottom Navigation Bar */}
-      <div className='d-lg-none' style={{
-        position:'fixed', bottom:0, width:'100%', background:'#212529', display:'flex', 
-        justifyContent: 'space-around', padding:'8px 0', borderTop:'2px solid #ffc107', 
-        zIndex:1030, boxShadow: '0 -2px 10px rgba(0,0,0,0.3)'
-      }}>
-        <div onClick={() => navigate('/')} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
-          <FaHome size={20} style={{color: location.pathname === '/' ? '#ffc107' : 'white'}}/><br/>Home
-        </div>
-        <div onClick={() => navigate('/category')} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
-          <FaThList size={20} style={{color: location.pathname === '/category' ? '#ffc107' : 'white'}}/><br/>Category
-        </div>
-        <div onClick={() => navigate(isAdmin ? '/admin/dashboard' : '/dashboard')} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
-          <div style={{
-            background: '#ffc107', width: '45px', height: '45px', borderRadius: '50%', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '-25px auto 5px', 
-            border: '4px solid #212529', boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
-          }}>
-            <FaChartLine size={20} color='#000'/>
-          </div>
-          Dashboard
-        </div>
-        <div onClick={() => navigate('/contact')} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
-          <FaUserPlus size={20} style={{color: location.pathname === '/contact' ? '#ffc107' : 'white'}}/><br/>Contact
-        </div>
-        <div onClick={() => setShowProfileModal(true)} className='text-center text-white' style={{fontSize:'10px', flex: 1}}>
-          <div className="position-relative d-inline-block">
-            <FaUserCircle size={20} style={{color: showProfileModal ? '#ffc107' : 'white'}}/>
-            {cartItems.length > 0 && (
-               <Badge pill bg='warning' text='dark' style={{position:'absolute', top:'-8px', right:'-8px', fontSize: '8px'}}>
-                 {cartItems.length}
-               </Badge>
-            )}
-          </div>
-          <br/>Profile
-        </div>
-      </div>
+ {/* Mobile Bottom Navigation Bar */}
+{/* Mobile Bottom Navigation Bar */}
+<div className='d-lg-none' style={{
+  position: 'fixed', 
+  bottom: 0, 
+  width: '100%', 
+  background: '#212529', 
+  display: 'flex', 
+  justifyContent: 'space-around', 
+  padding: '8px 0', 
+  borderTop: '2px solid #ffc107', 
+  zIndex: 1030, 
+  boxShadow: '0 -2px 10px rgba(0,0,0,0.3)'
+}}>
+  
+  {/* Home Button - ক্লিক করলে পেজ রিফ্রেশ হয়ে সব রিসেট হবে */}
+  <div onClick={() => window.location.href = '/'} className='text-center text-white' style={{ fontSize: '10px', flex: 1, cursor: 'pointer' }}>
+    <FaHome size={20} style={{ color: location.pathname === '/' ? '#ffc107' : 'white' }} /><br />Home
+  </div>
+
+  {/* Category Button - এটি হোমপেজের ক্যাটাগরি সেকশনে স্ক্রল করবে */}
+  <div 
+    onClick={() => {
+      if (window.location.pathname !== '/') {
+        window.location.href = '/#main-category-section';
+      } else {
+        const section = document.getElementById('main-category-section');
+        if (section) section.scrollIntoView({ behavior: 'smooth' });
+      }
+    }} 
+    className='text-center text-white' 
+    style={{ fontSize: '10px', flex: 1, cursor: 'pointer' }}
+  >
+    <FaThList size={20} style={{ color: '#fff' }} /><br />Category
+  </div>
+
+  {/* Dashboard Button (মাঝখানের গোল ডিজাইন) */}
+  <div onClick={() => navigate(isAdmin ? '/admin/dashboard' : '/dashboard')} className='text-center text-white' style={{ fontSize: '10px', flex: 1, cursor: 'pointer' }}>
+    <div style={{
+      background: '#ffc107', 
+      width: '45px', 
+      height: '45px', 
+      borderRadius: '50%', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      margin: '-25px auto 5px', 
+      border: '4px solid #212529',
+      boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+    }}>
+      <FaChartLine size={20} color='#000'/>
+    </div>
+    Dashboard
+  </div>
+
+  {/* Cart Button - আগের Contact এর বদলে এখন Cart */}
+  <div onClick={() => navigate('/cart')} className='text-center text-white' style={{ fontSize: '10px', flex: 1, cursor: 'pointer' }}>
+    <div className="position-relative d-inline-block">
+      <FaShoppingBag size={20} style={{ color: location.pathname === '/cart' ? '#ffc107' : 'white' }} />
+      {cartItems.length > 0 && (
+         <Badge pill bg='warning' text='dark' style={{ position: 'absolute', top: '-8px', right: '-8px', fontSize: '8px' }}>
+           {cartItems.reduce((a, c) => a + c.qty, 0)}
+         </Badge>
+      )}
+    </div>
+    <br />Cart
+  </div>
+
+  {/* Profile Button - যা প্রোফাইল মডেল ওপেন করবে */}
+  <div onClick={() => setShowProfileModal(true)} className='text-center text-white' style={{ fontSize: '10px', flex: 1, cursor: 'pointer' }}>
+    <FaUserCircle size={20} style={{ color: showProfileModal ? '#ffc107' : 'white' }} />
+    <br />Profile
+  </div>
+</div>
     </header>
   );
 };

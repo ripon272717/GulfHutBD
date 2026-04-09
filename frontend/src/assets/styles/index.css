@@ -316,3 +316,30 @@ option {
   color: white;
   background: #333;
 }
+.category-marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  width: 100%;
+}
+
+.marquee-content {
+  display: inline-block;
+  animation: marquee 25s linear infinite;
+}
+
+.category-item:hover {
+  background-color: #ffc107 !important; /* গোল্ডেন কালার হোভারে */
+  border-color: #ffc107 !important;
+  transition: 0.3s;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* মাউস রাখলে থামবে */
+.category-marquee-container:hover .marquee-content {
+  animation-play-state: paused;
+}
