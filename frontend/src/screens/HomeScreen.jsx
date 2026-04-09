@@ -66,7 +66,7 @@ const HomeScreen = () => {
               }
               .fixed-label {
                 position: relative;
-                z-index: 5;
+                z-index: 10;
                 background: #ffc107;
                 color: #000;
                 font-weight: bold;
@@ -79,8 +79,14 @@ const HomeScreen = () => {
               }
               .marquee-container {
                 display: flex;
-                overflow: hidden;
+                overflow-x: auto; /* টাচ করে ম্যানুয়ালি সরানোর জন্য */
                 width: 100%;
+                scrollbar-width: none; /* স্ক্রলবার হাইড করার জন্য */
+                -ms-overflow-style: none;
+                cursor: grab;
+              }
+              .marquee-container::-webkit-scrollbar {
+                display: none; /* ক্রোম/সাফারির স্ক্রলবার হাইড */
               }
               .marquee-inner {
                 display: flex;
@@ -88,7 +94,9 @@ const HomeScreen = () => {
                 animation: marquee 30s linear infinite;
                 padding: 10px 0;
               }
-              .marquee-inner:hover {
+              /* টাচ করলে বা মাউস ধরলে অটো-অ্যানিমেশন থেমে যাবে */
+              .marquee-container:active .marquee-inner,
+              .marquee-container:hover .marquee-inner {
                 animation-play-state: paused;
               }
               .cat-item {

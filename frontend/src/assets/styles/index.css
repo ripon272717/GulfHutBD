@@ -343,3 +343,16 @@ option {
 .category-marquee-container:hover .marquee-content {
   animation-play-state: paused;
 }
+
+
+.marquee-container::-webkit-scrollbar {
+  display: none; /* ক্রোম এবং সাফারির জন্য স্ক্রলবার হাইড */
+}
+
+
+
+/* টাচ করলে বা মাউস ধরলে অ্যানিমেশন বন্ধ হবে */
+.marquee-container:active .marquee-inner,
+.marquee-container:hover .marquee-inner {
+  animation-play-state: paused;
+}
