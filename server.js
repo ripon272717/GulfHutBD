@@ -37,8 +37,8 @@ app.use(
 );
 
 // ৫. মিডলওয়্যার (অর্ডার অনুযায়ী সাজানো)
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser()); // কুকি রিড করার জন্য এটি রুটস এর উপরে থাকতে হবে
 
 // ৬. এপিআই রুটস
