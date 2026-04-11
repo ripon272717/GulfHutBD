@@ -21,7 +21,11 @@ const storage = new CloudinaryStorage({
   },
 });
 
-const upload = multer({ storage });
+// তোর এই অংশটুকু এভাবে পরিবর্তন কর:
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 } // ১০ এমবি লিমিট সেট করে দিলাম
+});
 
 router.post('/', protect, upload.single('image'), (req, res) => {
   try {

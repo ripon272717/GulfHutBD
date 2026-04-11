@@ -3,7 +3,7 @@ import Product from '../models/productModel.js';
 
 // @desc    সব প্রোডাক্ট ফেচ করা (সার্চ ও পেজিনেশন সহ)
 const getProducts = asyncHandler(async (req, res) => {
-  const pageSize = Number(process.env.PAGINATION_LIMIT) || 8;
+  const pageSize = Number(process.env.PAGINATION_LIMIT) || 100;
   const page = Number(req.query.pageNumber) || 1;
 
   const keyword = req.query.keyword
