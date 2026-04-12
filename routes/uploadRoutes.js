@@ -2,11 +2,10 @@ import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import multer from 'multer';
 import express from 'express';
-import { protect, admin } from '../middleware/authMiddleware.js';
+import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// সরাসরি কনফিগারেশন চেক
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -17,31 +16,40 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'gulfhut_images',
-    allowed_formats: ['jpg', 'png', 'jpeg'],
+    // এখানে 'webp' যোগ করে দে
+    allowed_formats: ['jpg', 'png', 'jpeg', 'webp'], 
+    public_id: (req, file) => `file-${Date.now()}`,
+    resource_type: 'auto',
   },
 });
 
-// তোর এই অংশটুকু এভাবে পরিবর্তন কর:
 const upload = multer({ 
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 } // ১০ এমবি লিমিট সেট করে দিলাম
-});
+  limits: { fileSize: 10 * 1024 * 1024 } 
+}).single('image'); // এখানে মিডলওয়্যার আলাদা করে নিলাম
 
-router.post('/', protect, upload.single('image'), (req, res) => {
-  try {
+router.post('/', protect, (req, res) => {
+  upload(req, res, function (err) {
+    if (err instanceof multer.MulterError) {
+      // Multer এর কোনো এরর হলে (যেমন ফাইল সাইজ বড় হলে)
+      console.error('Multer Error:', err);
+      return res.status(400).json({ message: `Multer error: ${err.message}` });
+    } else if (err) {
+      // ক্লাউডিনারি বা অন্য কোনো এরর হলে
+      console.error('Cloudinary/Server Error:', err);
+      return res.status(500).json({ message: `Upload error: ${err.message}` });
+    }
+
     if (!req.file) {
       return res.status(400).send({ message: 'No file uploaded' });
     }
-    // সফল হলে ইমেজের পাথ পাঠানো
+
+    // সফল হলে
     res.send({
       message: 'Image uploaded successfully',
       image: req.file.path,
     });
-  } catch (error) {
-    // এরর হলে কনসোলে দেখাবে কেন হচ্ছে
-    console.error(error);
-    res.status(500).send({ message: 'Server Error during upload' });
-  }
+  });
 });
 
 export default router;

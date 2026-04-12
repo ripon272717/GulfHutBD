@@ -42,6 +42,10 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser()); // কুকি রিড করার জন্য এটি রুটস এর উপরে থাকতে হবে
 
 // ৬. এপিআই রুটস
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/upload', uploadRoutes);
