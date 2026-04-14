@@ -94,7 +94,7 @@ const Header = () => {
     const file = e.target.files[0];
     if (!file) return;
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('media', file);
     try {
       const uploadRes = await uploadUserImage(formData).unwrap();
       const res = await updateProfile({ _id: userInfo._id, image: uploadRes.image }).unwrap();

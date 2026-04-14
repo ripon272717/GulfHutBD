@@ -28,7 +28,7 @@ const ProfileScreen = ({ show, onHide }) => {
   const uploadFileHandler = async (e) => {
     const file = e.target.files[0];
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('media', file);
     try {
       const res = await uploadUserImage(formData).unwrap();
       setImage(res.image); 

@@ -81,13 +81,13 @@ const updateProduct = asyncHandler(async (req, res) => {
     image,
     brand,
     countInStock,
-    shippingTime
+    shippingTime,
+    variants // ভ্যারিয়েন্ট রিসিভ করা হচ্ছে
   } = req.body;
 
   const product = await Product.findById(req.params.id);
 
   if (product) {
-    // ডাটা অ্যাসাইন করা হচ্ছে
     product.name = name;
     product.pCode = pCode || product.pCode;
     product.category = category;
@@ -102,10 +102,11 @@ const updateProduct = asyncHandler(async (req, res) => {
     product.bazText = bazText;
     product.isBazOn = isBazOn;
     product.images = images; 
-    product.image = image;
+    product.image = image || product.image; // ইমেজ হ্যান্ডলিং
     product.brand = brand;
     product.countInStock = countInStock; 
     product.shippingTime = shippingTime;
+    product.variants = variants; // ভ্যারিয়েন্ট সেভ করা হচ্ছে
 
     const updatedProduct = await product.save();
     res.json(updatedProduct);

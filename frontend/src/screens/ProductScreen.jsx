@@ -1,408 +1,298 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { Row, Col, Image, ListGroup, Card, Button, Form, Badge, Modal, Table } from 'react-bootstrap';
-import { LinkContainer } from 'react-router-bootstrap'; 
-import { toast } from 'react-toastify';
-// --- UPDATE: ReactPlayer ইম্পোর্ট করা হয়েছে ---
-import ReactPlayer from 'react-player'; 
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux'; 
+import { Row, Col, Card, Button, Form, Badge, ListGroup, Container } from 'react-bootstrap';
 import { 
-  FaEdit, 
-  FaArrowLeft, 
-  FaShoppingCart, 
-  FaPlayCircle, 
-  FaRulerCombined, 
-  FaCheckCircle, 
-  FaHashtag, 
-  FaStar 
+  FaShoppingCart, FaTruck, FaCheckCircle, FaTimesCircle, 
+  FaChevronLeft, FaEdit, FaPlayCircle, FaInfoCircle, FaChevronRight 
 } from 'react-icons/fa';
-import {
-  useGetProductDetailsQuery,
-  useCreateReviewMutation,
-} from '../slices/productsApiSlice';
-import Rating from '../components/Rating';
+
+import ReactPlayer from 'react-player';
+import { useGetProductDetailsQuery } from '../slices/productsApiSlice';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
-import Meta from '../components/Meta';
-import { addToCart } from '../slices/cartSlice';
+import { toast } from 'react-toastify';
 
 const ProductScreen = () => {
   const { id: productId } = useParams();
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const [qty, setQty] = useState(1);
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState('');
-  const [showSizeGuide, setShowSizeGuide] = useState(false);
   
-  // --- ডাইনামিক ভ্যারিয়েন্ট স্টেট ---
-  const [activeImgIdx, setActiveImgIdx] = useState(0); 
-  const [selectedSize, setSelectedSize] = useState('');
+  // ভিডিওর জন্য রেফারেন্স
+  const playerRef = useRef(null);
 
-  const { data: product, isLoading, refetch, error } = useGetProductDetailsQuery(productId);
+  // --- States ---
+  const [activeImageIdx, setActiveImageIdx] = useState(0); 
+  const [selectedVariant, setSelectedVariant] = useState(null);
+  const [qty, setQty] = useState(1);
+  const [showFloatingVideo, setShowFloatingVideo] = useState(true);
+
+  // ডাটা ফেচিং
   const { userInfo } = useSelector((state) => state.auth);
-  const [createReview, { isLoading: loadingProductReview }] = useCreateReviewMutation();
+  const { data: product, isLoading, error } = useGetProductDetailsQuery(productId);
 
-  // ইমেজ চেঞ্জ করলে সাইজ সিলেকশন রিসেট হবে
-  const handleImageSelect = (index) => {
-    setActiveImgIdx(index);
-    setSelectedSize(''); 
+  // ডিফল্ট ভ্যারিয়েন্ট সেট
+  useEffect(() => {
+    if (product) {
+      if (product.variants?.length > 0) {
+        const firstAvailable = product.variants.find(v => v.stock > 0);
+        if (firstAvailable) setSelectedVariant(firstAvailable);
+      }
+    }
+  }, [product]);
+
+  // ইমেজ স্লাইডার লজিক (Next/Prev)
+  const nextImage = () => {
+    if (product?.images && product.images.length > 0) {
+      setActiveImageIdx((prev) => (prev + 1) % product.images.length);
+    }
+  };
+
+  const prevImage = () => {
+    if (product?.images && product.images.length > 0) {
+      setActiveImageIdx((prev) => (prev - 1 + product.images.length) % product.images.length);
+    }
   };
 
   const addToCartHandler = () => {
-    const activeImage = product.images && product.images.length > 0 ? product.images[activeImgIdx] : null;
-    
-    // --- UPDATE: এখানে তোর মেইন ভ্যারিয়েন্ট লজিকটা আরও মজবুত করা হয়েছে ---
-    const currentVariants = product.variants && product.variants.length > 0 ? product.variants : (activeImage?.variants || []);
-    const hasVariants = currentVariants.length > 0;
-    
-    if (hasVariants && !selectedSize) {
-      toast.error('দয়া করে একটি সাইজ সিলেক্ট করুন');
+    if (!selectedVariant) {
+      toast.error('দয়া করে সাইজ ও কালার সিলেক্ট করুন');
       return;
     }
-    
-    const cartItem = {
-      ...product,
-      qty,
-      image: activeImage ? activeImage.url : product.image,
-      color: currentVariants.find(v => v.size === selectedSize)?.color || 'Default',
-      size: selectedSize || 'N/A'
-    };
-
-    dispatch(addToCart(cartItem));
-    navigate('/cart');
+    toast.success('কার্টে যোগ করা হয়েছে!');
   };
 
-  const submitHandler = async (e) => {
-    e.preventDefault();
-    try {
-      await createReview({ productId, rating, comment }).unwrap();
-      refetch();
-      toast.success('রিভিউটি সফলভাবে যোগ করা হয়েছে');
-      setRating(0);
-      setComment('');
-    } catch (err) {
-      toast.error(err?.data?.message || err.error);
-    }
-  };
+  if (isLoading) return <Loader />;
+  if (error) return <Message variant='danger'>{error.data?.message || error.error}</Message>;
 
-  // সাইজ গাইড মোডাল
-  const SizeGuideModal = () => (
-    <Modal show={showSizeGuide} onHide={() => setShowSizeGuide(false)} centered size="md">
-      <Modal.Header closeButton className="border-0">
-        <Modal.Title className="fw-bold">Size Guide</Modal.Title>
-      </Modal.Header>
-      <Modal.Body className="p-0">
-        <Table responsive striped hover className="mb-0 text-center small">
-          <thead className="table-dark">
-            <tr>
-              <th>Label Size</th>
-              <th>Underbust (cm)</th>
-              <th>Cup Height (cm)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>S</td><td>27.2</td><td>6.7</td></tr>
-            <tr><td>M</td><td>28.8</td><td>7.1</td></tr>
-            <tr><td>L</td><td>30.3</td><td>7.5</td></tr>
-            <tr><td>XL</td><td>31.9</td><td>7.9</td></tr>
-          </tbody>
-        </Table>
-      </Modal.Body>
-    </Modal>
-  );
+  const currentImage = product.images && product.images.length > 0 
+    ? product.images[activeImageIdx].url 
+    : product.image;
 
   return (
-    <>
-      <Link className='btn btn-light my-3 border shadow-sm rounded-pill px-4' to='/'>
-        <FaArrowLeft className='me-2' /> শপিং চালিয়ে যান
-      </Link>
+    <div className="bg-light min-vh-100 pb-5">
+      {/* ১. স্টিকি হেডার */}
+      <div className="p-3 d-flex align-items-center justify-content-between bg-white shadow-sm sticky-top mb-3" style={{ zIndex: 1000 }}>
+        <div className="d-flex align-items-center">
+          <FaChevronLeft onClick={() => navigate(-1)} style={{ cursor: 'pointer' }} className="me-3 text-dark" />
+          <h6 className="mb-0 fw-bold text-truncate" style={{maxWidth: '180px'}}>{product.name}</h6>
+        </div>
+        
+        {userInfo && userInfo.isAdmin && (
+          <Button 
+            variant="warning" size="sm" 
+            className="rounded-pill px-3 fw-bold shadow-sm"
+            onClick={() => navigate(`/admin/product/${product._id}/edit`)}
+          >
+            <FaEdit className="me-1"/> Edit
+          </Button>
+        )}
+      </div>
 
-      {isLoading ? (
-        <Loader />
-      ) : error ? (
-        <Message variant='danger'>{error?.data?.message || error.error}</Message>
-      ) : (
-        <>
-          <Meta title={product.name} description={product.description} />
+      <Container>
+        <Row className="g-4">
           
-          <Row className='g-4'>
-            {/* বাম পাশ: ইমেজ এবং ভিডিও গ্যালারি */}
-            <Col md={6}>
-              <div className="position-relative bg-white border rounded-4 overflow-hidden shadow-sm">
-                {/* অফার এবং বাজ টেক্সট ডিসপ্লে */}
-                {product.isBazOn && (
-                  <Badge bg="danger" className="position-absolute top-0 start-0 m-3 px-3 py-2 shadow-sm fs-6" style={{ zIndex: 10 }}>
-                    {product.bazText}
-                  </Badge>
-                )}
-                {product.isOfferOn && (
-                  <Badge bg="warning" text="dark" className="position-absolute top-0 end-0 m-3 px-3 py-2 shadow-sm fs-6" style={{ zIndex: 10 }}>
-                    {product.offerText}
-                  </Badge>
-                )}
-                
-                <Image 
-                  src={product.images && product.images.length > 0 ? product.images[activeImgIdx].url : product.image} 
-                  alt={product.name} 
-                  fluid className='w-100 object-fit-contain'
-                  style={{ maxHeight: '550px', minHeight: '400px' }}
-                />
-
-                {/* --- UPDATE: ভিডিও গাইড ছোট উইন্ডো (তোর ডিমান্ড অনুযায়ী ReactPlayer দিয়ে আপডেট) --- */}
-                {product.videoUrl && (
-                  <div className="position-absolute bottom-0 end-0 m-3 border border-white shadow-lg rounded-3 overflow-hidden bg-black" style={{ width: '110px', height: '110px', zIndex: 100 }}>
-                     <ReactPlayer 
-                      url={product.videoUrl} 
-                      width="100%" 
-                      height="100%" 
-                      playing 
-                      muted 
-                      loop 
-                      playsinline
-                      controls={false}
+          {/* ২. ইমেজ ও স্লাইডার সেকশন */}
+          <Col md={6}>
+            <div className="position-relative">
+              <Card className="border-0 shadow-sm rounded-4 bg-white p-2 overflow-hidden">
+                <div className="position-relative rounded-3 mb-3 overflow-hidden bg-white d-flex align-items-center justify-content-center" style={{ width: '100%', height: '400px' }}>
+                    <img 
+                        src={currentImage} 
+                        className="w-100 h-100 object-fit-contain transition-all" 
+                        alt="Product Main" 
                     />
-                  </div>
-                )}
-              </div>
-              
-              {/* থাম্বনেইল লিস্ট */}
-              <div className='d-flex gap-2 mt-3 overflow-auto pb-2 custom-scrollbar'>
-                {product.images && product.images.map((img, i) => (
-                  <div key={i} className="position-relative flex-shrink-0">
-                    <Image
-                      src={img.url}
-                      alt={`thumb-${i}`}
-                      thumbnail
-                      style={{ width: '80px', height: '80px', cursor: 'pointer', objectFit: 'cover' }}
-                      className={activeImgIdx === i ? 'border-primary border-3 shadow' : 'border-light'}
-                      onClick={() => handleImageSelect(i)}
-                    />
-                    {activeImgIdx === i && <FaCheckCircle className="position-absolute top-0 start-0 text-primary bg-white rounded-circle" style={{fontSize: '14px', marginTop: '-5px'}} />}
-                  </div>
-                ))}
-              </div>
-            </Col>
-
-            {/* ডান পাশ: প্রোডাক্ট কন্টেন্ট */}
-            <Col md={6}>
-              <ListGroup variant='flush' className='ps-md-4'>
-                
-                {/* প্রোডাক্ট কোড - যা কাস্টমার কমপ্লেইনের জন্য ব্যবহার করবে */}
-                <ListGroup.Item className='border-0 pb-0'>
-                  <div className="d-inline-flex align-items-center bg-primary bg-opacity-10 text-primary px-3 py-1 rounded-pill mb-2 fw-bold small border border-primary border-opacity-25">
-                    <FaHashtag className="me-1" /> Product Code: {product.pCode || 'N/A'}
-                  </div>
-                  <h2 className='fw-bold text-dark display-6'>{product.name}</h2>
-                </ListGroup.Item>
-
-                <ListGroup.Item className='border-0'>
-                  <Rating value={product.rating} text={`${product.numReviews} রিভিউ`} />
-                </ListGroup.Item>
-
-                {/* প্রাইস সেকশন (নতুন ডিজাইন) */}
-                <ListGroup.Item className='border-0 mt-2'>
-                  <div className='p-4 bg-light rounded-4 border-start border-warning border-5 shadow-sm'>
-                    <div className='small text-muted mb-1 fw-bold'>{product.priceLabel || 'Current Price'}:</div>
-                    <div className="d-flex align-items-baseline gap-2">
-                        <span className='fs-1 fw-bold text-danger'>QR {product.priceQR}</span>
-                        <span className='text-success fw-bold fs-5'>≈ BDT {product.priceBDT}</span>
-                    </div>
-                    {product.isOfferOn && <Badge bg="dark" className="mt-2">Special Offer Applied</Badge>}
-                  </div>
-                </ListGroup.Item>
-
-                {/* ডাইনামিক সাইজ সিলেকশন */}
-                <ListGroup.Item className='border-0 mt-4'>
-                  <div className='d-flex justify-content-between align-items-center mb-3'>
-                    <strong className='text-uppercase small fw-bold text-secondary'>সাইজ বেছে নিন:</strong>
-                    <Button variant='link' size='sm' className='text-decoration-none text-muted p-0 fw-bold' onClick={() => setShowSizeGuide(true)}>
-                        <FaRulerCombined className='me-1 text-primary'/> সাইজ চার্ট
-                    </Button>
-                  </div>
-                  <div className='d-flex flex-wrap gap-2'>
-                    {/* --- UPDATE: ভ্যারিয়েন্ট লজিক চেক --- */}
-                    {(product.variants || product.images[activeImgIdx]?.variants)?.map((v, idx) => (
-                      <Button 
-                        key={idx} 
-                        variant={selectedSize === v.size ? 'dark' : 'outline-dark'} 
-                        className={`rounded-4 px-4 py-2 fw-bold ${v.stock <= 0 ? 'disabled' : ''}`}
-                        onClick={() => setSelectedSize(v.size)}
-                        disabled={v.stock <= 0}
-                      >
-                        {v.size} {v.stock <= 0 && '(Stock Out)'}
-                      </Button>
-                    ))}
-                    {(!product.variants && (!product.images || !product.images[activeImgIdx]?.variants || product.images[activeImgIdx]?.variants.length === 0)) && (
-                      <span className='text-muted small italic'>এই ভ্যারিয়েন্টের জন্য কোনো নির্দিষ্ট সাইজ নেই</span>
+                    
+                    {/* স্লাইড কন্ট্রোল বাটন (< ও >) */}
+                    {product.images && product.images.length > 1 && (
+                      <>
+                        <button 
+                          onClick={prevImage}
+                          className="position-absolute top-50 start-0 translate-middle-y btn btn-light rounded-circle shadow-sm ms-2 d-flex align-items-center justify-content-center"
+                          style={{ zIndex: 5, width: '42px', height: '42px', opacity: '0.9' }}
+                        >
+                          <FaChevronLeft size={18} />
+                        </button>
+                        <button 
+                          onClick={nextImage}
+                          className="position-absolute top-50 end-0 translate-middle-y btn btn-light rounded-circle shadow-sm me-2 d-flex align-items-center justify-content-center"
+                          style={{ zIndex: 5, width: '42px', height: '42px', opacity: '0.9' }}
+                        >
+                          <FaChevronRight size={18} />
+                        </button>
+                      </>
                     )}
-                  </div>
-                </ListGroup.Item>
+                </div>
 
-                {/* কার্ট সেকশন কার্ড */}
-                  <ListGroup.Item className='border-0 mt-4'>
-                  <Card className='border-0 bg-white p-4 rounded-4 shadow-sm border'>
-                    {/* স্টক স্ট্যাটাস */}
-                    <Row className='align-items-center mb-4'>
-                      <Col className='fw-bold'>স্টক স্ট্যাটাস:</Col>
-                      <Col className='text-end'>
-                        {product.countInStock > 0 ? (
-                          <Badge bg='success' className="rounded-pill px-3 py-2">In Stock</Badge>
-                        ) : (
-                          <Badge bg='danger' className="rounded-pill px-3 py-2">Out of Stock</Badge>
-                        )}
-                      </Col>
-                    </Row>
-
-                    {/* সাইজ সিলেকশন সেকশন - স্টক থাকলে দেখাবে */}
-                    {product.countInStock > 0 && product.sizes && product.sizes.length > 0 && (
-                      <div className="mb-4">
-                        {/* সাইজ বাটনগুলো উপরে */}
-                        <div className="d-flex flex-wrap mb-2">
-                          {product.sizes.map((s) => (
-                            <Button
-                              key={s}
-                              variant={selectedSize === s ? 'dark' : 'outline-secondary'}
-                              className="me-2 mb-2 d-flex align-items-center justify-content-center"
-                              onClick={() => setSelectedSize(s)}
-                              style={{ 
-                                minWidth: '50px',
-                                borderRadius: '8px',
-                                fontSize: '13px',
-                                fontWeight: '600',
-                                border: selectedSize === s ? '2px solid #ffc107' : '1px solid #ddd',
-                                backgroundColor: selectedSize === s ? '#212529' : 'transparent',
-                                color: selectedSize === s ? '#ffc107' : '#666',
-                                transition: '0.3s'
-                              }}
-                            >
-                              {s}
-                              {selectedSize === s && <FaCheckCircle className="ms-1" style={{ color: '#ffc107' }} />}
-                            </Button>
-                          ))}
-                        </div>
-                        
-                        {/* লেখাটা নিচে */}
-                        <div className="fw-bold" style={{ fontSize: '14px', color: '#333' }}>
-                          Select Your Size
-                        </div>
-                      </div>
-                    )}
-
-                    {/* পরিমাণ (Qty) */}
-                    {product.countInStock > 0 && (
-                      <Row className='align-items-center mb-4'>
-                        <Col className='fw-bold'>পরিমাণ (Qty):</Col>
-                        <Col>
-                          <Form.Control 
-                            as='select' 
-                            value={qty} 
-                            onChange={(e) => setQty(Number(e.target.value))} 
-                            className='rounded-pill border shadow-sm'
-                          >
-                            {[...Array(product.countInStock).keys()].map((x) => (
-                              <option key={x + 1} value={x + 1}>{x + 1}</option>
-                            ))}
-                          </Form.Control>
-                        </Col>
-                      </Row>
-                    )}
-
-                    {/* অ্যাড টু কার্ট বাটন */}
-                    <Button
-                      onClick={addToCartHandler}
-                      className='btn-block py-3 rounded-pill fw-bold shadow border-0 text-uppercase'
-                      type='button'
-                      variant='warning'
-                      disabled={product.countInStock === 0 || (product.sizes?.length > 0 && !selectedSize)}
-                      style={{ letterSpacing: '1px' }}
+                {/* থাম্বনেইল গ্যালারি */}
+                <div className="d-flex gap-2 overflow-auto pb-2 px-1">
+                  {product.images?.map((img, i) => (
+                    <div 
+                      key={i} 
+                      onClick={() => setActiveImageIdx(i)}
+                      className={`rounded-3 border-2 overflow-hidden cursor-pointer shadow-sm ${activeImageIdx === i ? 'border-primary' : 'border-light'}`}
+                      style={{ minWidth: '75px', height: '75px', transition: '0.3s' }}
                     >
-                      <FaShoppingCart className='me-2' /> 
-                      {product.countInStock === 0 ? 'স্টক আউট' : (selectedSize || product.sizes?.length === 0 ? 'ব্যাগে যোগ করুন' : 'সাইজ সিলেক্ট করুন')}
-                    </Button>
-                  </Card>
-                </ListGroup.Item>
-                {/* অ্যাডমিন সেকশন */}
-                {userInfo && userInfo.isAdmin && (
-                  <ListGroup.Item className='border-0 mt-2'>
-                    <LinkContainer to={`/admin/product/${product._id}/edit`}>
-                      <Button variant='outline-info' className='w-100 rounded-pill py-2 fw-bold shadow-sm'>
-                        <FaEdit className='me-2' /> এডিট প্রোডাক্ট (Admin)
-                      </Button>
-                    </LinkContainer>
-                  </ListGroup.Item>
-                )}
-              </ListGroup>
-            </Col>
-          </Row>
+                      <img src={img.url} className="w-100 h-100 object-fit-cover" alt={`thumb-${i}`} />
+                    </div>
+                  ))}
+                </div>
+              </Card>
 
-          {/* প্রোডাক্ট ডেসক্রিপশন */}
-          <Row className='mt-5'>
-            <Col md={12}>
-              <Card className='border-0 shadow-sm rounded-4 mb-5'>
-                <Card.Body className='p-4'>
-                  <h4 className='fw-bold border-bottom pb-3 mb-4 text-dark'>পণ্যের বিবরণ ও ডেসক্রিপশন</h4>
-                  <div className='product-description' style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8', color: '#444' }}>
-                    {product.description || 'এই প্রোডাক্টটির কোনো বিবরণ নেই।'}
-                  </div>
+              {/* ৩. ফ্লোটিং ভিডিও (মাস্ট অটো-প্লে ফিক্স) */}
+              {product.videoUrl && showFloatingVideo && (
+                <div 
+                  className="position-absolute shadow-lg rounded-3 overflow-hidden bg-black border border-white" 
+                  style={{ 
+                    width: '135px', 
+                    height: '165px', 
+                    bottom: '130px', 
+                    right: '25px', 
+                    zIndex: 20 
+                  }}
+                >
+                  <div 
+                    className="position-absolute top-0 end-0 bg-dark text-white px-2 py-1 shadow" 
+                    style={{ cursor: 'pointer', fontSize: '12px', zIndex: 25, borderRadius: '0 0 0 8px' }}
+                    onClick={() => setShowFloatingVideo(false)}
+                  >✕</div>
+                  
+                  <ReactPlayer 
+                    ref={playerRef}
+                    url={product.videoUrl} 
+                    width="100%" 
+                    height="100%" 
+                    playing={true} 
+                    muted={true}   
+                    loop={true} 
+                    playsinline={true}
+                    controls={false}
+                    onReady={(player) => {
+                        const video = player.getInternalPlayer();
+                        if (video) {
+                            video.setAttribute('muted', ''); // ব্রাউজারকে মিউট নিশ্চিত করা
+                            video.play();
+                        }
+                    }}
+                    config={{
+                      file: {
+                        attributes: {
+                          style: { objectFit: 'cover', width: '100%', height: '100%' },
+                          autoPlay: true,
+                          muted: true,
+                          playsInline: true,
+                          preload: "auto"
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </Col>
+
+          {/* ৪. প্রোডাক্ট ইনফরমেশন */}
+          <Col md={6}>
+            <div className="ps-md-3">
+              <div className="mb-3">
+                <Badge bg="danger" className="mb-2 px-3 py-2 rounded-pill shadow-sm">
+                  {product.offerCategory || 'Special Price'}
+                </Badge>
+                <h2 className="fw-bold text-dark mb-1">{product.name}</h2>
+                <small className="text-muted">Code: {product.pCode}</small>
+              </div>
+
+              {/* প্রাইস সেকশন */}
+              <div className="d-flex align-items-center gap-3 my-4 bg-white p-3 rounded-4 shadow-sm border border-light">
+                <div>
+                  <h3 className="text-primary fw-bold mb-0">{product.priceQR} QR</h3>
+                  <div className="text-success fw-bold small">৳ {product.priceBDT} (পেমেন্ট রেট)</div>
+                </div>
+                <div className="ms-auto text-end">
+                   <div className="small text-muted mb-1">ইউনিট</div>
+                   <Badge bg="light" text="dark" className="border px-3 py-2">{product.priceLabel || '1 pcs'}</Badge>
+                </div>
+              </div>
+
+              {/* সাইজ ও কালার ভ্যারিয়েন্ট */}
+              <div className="mb-4">
+                <h6 className="fw-bold mb-3 small text-muted text-uppercase">সিলেক্ট করুন:</h6>
+                <div className="d-flex flex-wrap gap-2">
+                  {product.variants?.map((v, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => v.stock > 0 && setSelectedVariant(v)}
+                      className={`p-2 border-2 rounded-3 text-center transition-all ${
+                        selectedVariant === v ? 'border-primary bg-primary text-white shadow' : 'bg-white border-light text-dark shadow-sm'
+                      } ${v.stock <= 0 ? 'opacity-40 grayscale' : 'cursor-pointer hover-shadow'}`}
+                      style={{ minWidth: '100px' }}
+                    >
+                      <div className="fw-bold">{v.size}</div>
+                      <div className="very-small opacity-75">{v.color}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* শিপিং ও স্টক স্ট্যাটাস */}
+              <ListGroup variant="flush" className="rounded-4 overflow-hidden shadow-sm mb-4 border border-light">
+                <ListGroup.Item className="d-flex justify-content-between p-3 align-items-center">
+                  <span className="text-muted small"><FaTruck className="me-2 text-primary"/> ডেলিভারি সময়:</span>
+                  <span className="small fw-bold">{product.shippingTime || '৭-১৫ দিন'}</span>
+                </ListGroup.Item>
+                <ListGroup.Item className="d-flex justify-content-between p-3 align-items-center">
+                  <span className="text-muted small"><FaCheckCircle className="me-2 text-success"/> বর্তমান স্টক:</span>
+                  <Badge bg={selectedVariant?.stock > 0 ? 'success' : 'danger'}>
+                    {selectedVariant ? (selectedVariant.stock > 0 ? `ইন স্টক (${selectedVariant.stock})` : 'আউট অফ স্টক') : 'প্রথমে সাইজ পছন্দ করুন'}
+                  </Badge>
+                </ListGroup.Item>
+              </ListGroup>
+
+              {/* কোয়ান্টিটি ও কার্ট বাটন */}
+              <div className="d-flex gap-2">
+                <Form.Control 
+                  as="select" 
+                  value={qty} 
+                  onChange={(e) => setQty(Number(e.target.value))}
+                  className="rounded-pill text-center fw-bold shadow-sm"
+                  style={{ width: '85px', border: '1px solid #ddd' }}
+                >
+                  {[...Array(selectedVariant?.stock || 0).keys()].map((x) => (
+                    <option key={x + 1} value={x + 1}>{x + 1}</option>
+                  ))}
+                </Form.Control>
+                <Button
+                  className='flex-grow-1 py-3 fw-bold rounded-pill shadow-lg text-uppercase'
+                  variant="dark"
+                  disabled={!selectedVariant || selectedVariant.stock === 0}
+                  onClick={addToCartHandler}
+                >
+                  <FaShoppingCart className="me-2"/> কার্টে যোগ করুন
+                </Button>
+              </div>
+
+              {/* ডেসক্রিপশন */}
+              <Card className="mt-4 border-0 shadow-sm rounded-4 bg-white border-start border-primary border-4">
+                <Card.Body>
+                  <h6 className="fw-bold mb-2"><FaInfoCircle className="me-2 text-primary"/> বিস্তারিত তথ্য:</h6>
+                  <p className="text-muted small mb-0" style={{lineHeight: '1.6'}}>{product.description}</p>
                 </Card.Body>
               </Card>
-            </Col>
-          </Row>
+            </div>
+          </Col>
+        </Row>
+      </Container>
 
-          {/* রিভিউ সেকশন */}
-          <Row className='mt-2 pb-5'>
-            <Col md={6}>
-              <h3 className='fw-bold mb-4'>কাস্টমার রিভিউ ({product.reviews.length})</h3>
-              {product.reviews.length === 0 && <Message>এখনও কোনো রিভিউ নেই। আপনিই প্রথম রিভিউ দিন!</Message>}
-              <ListGroup variant='flush'>
-                {product.reviews.map((review) => (
-                  <ListGroup.Item key={review._id} className='bg-white border rounded-4 mb-3 p-4 shadow-sm'>
-                    <div className='d-flex justify-content-between align-items-center mb-2'>
-                      <strong className='fs-5 text-dark'>{review.name}</strong>
-                      <span className='text-muted small'>{review.createdAt.substring(0, 10)}</span>
-                    </div>
-                    <Rating value={review.rating} />
-                    <p className='mt-3 mb-0 text-muted'>{review.comment}</p>
-                  </ListGroup.Item>
-                ))}
-                
-                <ListGroup.Item className='mt-4 border-0 p-0'>
-                  <h4 className='fw-bold mb-3'>আপনার মতামত শেয়ার করুন</h4>
-                  {loadingProductReview && <Loader />}
-                  {userInfo ? (
-                    <Form onSubmit={submitHandler} className='bg-light p-4 rounded-4 shadow-sm border border-white'>
-                      <Form.Group className='my-2' controlId='rating'>
-                        <Form.Label className='fw-bold small text-uppercase text-muted'>আপনার রেটিং</Form.Label>
-                        <Form.Control as='select' required value={rating} onChange={(e) => setRating(e.target.value)} className='rounded-pill border-0 shadow-sm'>
-                          <option value=''>নির্বাচন করুন...</option>
-                          <option value='1'>১ - খুব খারাপ</option>
-                          <option value='2'>২ - মোটামুটি</option>
-                          <option value='3'>৩ - ভালো</option>
-                          <option value='4'>৪ - খুব ভালো</option>
-                          <option value='5'>৫ - অসাধারণ</option>
-                        </Form.Control>
-                      </Form.Group>
-                      <Form.Group className='my-3' controlId='comment'>
-                        <Form.Label className='fw-bold small text-uppercase text-muted'>আপনার মন্তব্য</Form.Label>
-                        <Form.Control as='textarea' rows='3' required value={comment} onChange={(e) => setComment(e.target.value)} className='rounded-4 border-0 shadow-sm' placeholder='প্রোডাক্টটি আপনার কেমন লেগেছে?'></Form.Control>
-                      </Form.Group>
-                      <Button disabled={loadingProductReview} type='submit' variant='dark' className='w-100 rounded-pill py-2 fw-bold'>রিভিউ সাবমিট করুন</Button>
-                    </Form>
-                  ) : (
-                    <Message>রিভিউ দিতে দয়া করে <Link to='/login' className='fw-bold'>লগইন</Link> করুন।</Message>
-                  )}
-                </ListGroup.Item>
-              </ListGroup>
-            </Col>
-          </Row>
-
-          <SizeGuideModal />
-        </>
+      {/* ভিডিও পুনরায় চালু বাটন */}
+      {!showFloatingVideo && product.videoUrl && (
+        <div 
+          className="position-fixed bottom-0 end-0 m-4 bg-primary text-white p-3 rounded-circle shadow-lg cursor-pointer"
+          onClick={() => setShowFloatingVideo(true)}
+          style={{ zIndex: 1000 }}
+        >
+          <FaPlayCircle size={25} />
+        </div>
       )}
-    </>
+    </div>
   );
 };
 

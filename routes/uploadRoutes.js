@@ -15,27 +15,33 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'gulfhut_images',
-    // এখানে 'webp' যোগ করে দে
-    allowed_formats: ['jpg', 'png', 'jpeg', 'webp'], 
-    public_id: (req, file) => `file-${Date.now()}`,
-    resource_type: 'auto',
+    folder: 'gulfhut_media',
+    // এখানে 'video' সাপোর্ট করার জন্য resource_type 'auto' রাখা জরুরি
+    resource_type: 'auto', 
+    allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'mp4', 'mkv', 'mov'],
+    public_id: (req, file) => `media-${Date.now()}`,
   },
 });
 
+// ভিডিও ফাইল সাধারণত বড় হয়, তাই লিমিট বাড়িয়ে ২০ এমবি বা তার বেশি করে দে
 const upload = multer({ 
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 } 
-}).single('image'); // এখানে মিডলওয়্যার আলাদা করে নিলাম
+  limits: { fileSize: 20 * 1024 * 1024 } 
+}).single('media'); // 'image' এর বদলে 'media' নাম দিতে পারিস যেন ভিডিও-ছবি দুইটাই বোঝায়
+
 
 router.post('/', protect, (req, res) => {
   upload(req, res, function (err) {
     if (err instanceof multer.MulterError) {
-      // Multer এর কোনো এরর হলে (যেমন ফাইল সাইজ বড় হলে)
+      // ফাইল সাইজ বেশি বড় হলে (লিমিট ক্রস করলে) এই এরর আসবে
       console.error('Multer Error:', err);
-      return res.status(400).json({ message: `Multer error: ${err.message}` });
+      return res.status(400).json({ 
+        message: err.code === 'LIMIT_FILE_SIZE' 
+          ? 'ফাইল সাইজ অনেক বড়! সর্বোচ্চ ১০ এমবি পর্যন্ত এলাউড।' 
+          : `Multer error: ${err.message}` 
+      });
     } else if (err) {
-      // ক্লাউডিনারি বা অন্য কোনো এরর হলে
+      // ক্লাউডিনারি বা ফরমেট জনিত এরর
       console.error('Cloudinary/Server Error:', err);
       return res.status(500).json({ message: `Upload error: ${err.message}` });
     }
@@ -44,12 +50,12 @@ router.post('/', protect, (req, res) => {
       return res.status(400).send({ message: 'No file uploaded' });
     }
 
-    // সফল হলে
+    // সফল হলে ক্লাউডিনারি থেকে আসা ইমেজের পাথ এবং মিডিয়া টাইপ (image/video) রেসপন্স দিবে
     res.send({
-      message: 'Image uploaded successfully',
-      image: req.file.path,
+      message: 'Uploaded successfully!',
+      url: req.file.path,
+      mimetype: req.file.mimetype // এটি দিয়ে বুঝবি ভিডিও না কি ছবি
     });
   });
 });
-
 export default router;
