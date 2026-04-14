@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-// রিভিউ স্কিমা (তোর অরিজিনাল কোড)
+// রিভিউ স্কিমা (তোর অরিজিনাল কোড - কোনো পরিবর্তন নেই)
 const reviewSchema = mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -17,17 +17,27 @@ const reviewSchema = mongoose.Schema(
   }
 );
 
-// ভ্যারিয়েন্ট স্কিমা (কালার, সাইজ, স্টক এবং স্বতন্ত্র তথ্যের জন্য)
+// ভ্যারিয়েন্ট স্কিমা (তোর নতুন আইডিয়া অনুযায়ী প্রতিটি ইমেজের জন্য স্বতন্ত্র তথ্য)
 const variantSchema = mongoose.Schema({
-  vCode: { type: String }, // তোর আইডিয়া অনুযায়ী: মেইন পিসিওড + a, b, c (যেমন: 123-a)
+  vCode: { type: String }, // তোর আইডিয়া: মেইন পিসিওড + V1, V2 (যেমন: TSH-101-V1)
   color: { type: String },
   size: { type: String },
   stock: { type: Number, default: 0 },
-  image: { type: String }, // ভেরিয়েন্টের জন্য মেইন ছবি
-  additionalImages: [String], // ওই নির্দিষ্ট কালারের অন্যান্য অ্যাঙ্গেলের ছবি (swipe করার জন্য)
-  isHide: { type: Boolean, default: false }, // স্টক শেষ বা প্রয়োজনে হাইড করার জন্য
-  priceQR: { type: Number }, // ভেরিয়েন্টের দাম আলাদা হতে পারে তাই রাখা হলো
-  priceBDT: { type: Number },
+  image: { type: String }, // ওই ভেরিয়েন্টের নির্দিষ্ট ছবি
+  additionalImages: [String], // ওই কালারের অন্যান্য ভিউ (সোয়াইপ করার জন্য)
+  isHide: { type: Boolean, default: false },
+  
+  // ব্ল্যাঙ্ক ফর্মের জন্য স্বতন্ত্র প্রাইস (যদি মেইন প্রোডাক্ট থেকে আলাদা হয়)
+  priceQR: { type: Number, default: 0 }, 
+  priceBDT: { type: Number, default: 0 },
+  
+  // তুই যদি চাস এক কালারের আন্ডারে অনেক সাইজ হবে, তবে এই 'sizes' অ্যারেটা কাজে লাগবে
+  sizes: [
+    {
+      size: { type: String },
+      stock: { type: Number, default: 0 }
+    }
+  ]
 });
 
 // মেইন প্রোডাক্ট স্কিমা
@@ -39,31 +49,31 @@ const productSchema = mongoose.Schema(
       ref: 'User',
     },
     name: {
-      type: String,
+      type: String, // তোর রিকোয়ারমেন্ট: নাম সব ভ্যারিয়েন্টে সেম থাকবে
       required: true,
     },
     pCode: {
-      type: String,
+      type: String, // মেইন প্রোডাক্ট কোড
       required: true,
       unique: true, 
     },
     image: {
-      type: String,
+      type: String, // মেইন থাম্বনেইল ইমেজ
       required: true,
     },
-    // গ্যালারির জন্য মাল্টিপল ইমেজের অ্যারে (Front, Back, Side views)
+    // গ্যালারির জন্য মাল্টিপল ইমেজের অ্যারে
     images: [
       {
         url: { type: String },
+        pCode: { type: String }, // প্রতিটি ইমেজের সাথে তুই যে ইউনিক কোড চেয়েছিস
         isMain: { type: Boolean, default: false },
-        label: { type: String, default: 'General' } // Front, Back, Side ইত্যাদি চিহ্নিত করতে
+        label: { type: String, default: 'General' } 
       }
     ], 
     videoUrl: {
       type: String,
       default: '',
     },
-    // তোর চাহিদা অনুযায়ী ফ্লোটিং ভিডিও কন্ট্রোল
     isVideoFloating: {
       type: Boolean,
       default: true,
@@ -85,7 +95,9 @@ const productSchema = mongoose.Schema(
       required: true,
     },
     reviews: [reviewSchema],
-    variants: [variantSchema], // তোর সেই কালার/সাইজ ভেরিয়েন্ট সিস্টেম
+    
+    // ভ্যারিয়েন্ট সিস্টেম (কালার, সাইজ, এবং আলাদা কোডের জন্য)
+    variants: [variantSchema], 
 
     rating: {
       type: Number,
@@ -98,7 +110,7 @@ const productSchema = mongoose.Schema(
       default: 0,
     },
     
-    // প্রাইস সেকশন
+    // মেইন প্রাইস সেকশন (যদি ভ্যারিয়েন্ট ডিটেইলস অ্যাড না করিস তবে এটা শো করবে)
     priceLabel: {
       type: String,
       default: 'Price', 
