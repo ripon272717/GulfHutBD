@@ -19,26 +19,42 @@ const reviewSchema = mongoose.Schema(
 
 // ভ্যারিয়েন্ট স্কিমা (তোর নতুন আইডিয়া অনুযায়ী প্রতিটি ইমেজের জন্য স্বতন্ত্র তথ্য)
 const variantSchema = mongoose.Schema({
-  vCode: { type: String }, // তোর আইডিয়া: মেইন পিসিওড + V1, V2 (যেমন: TSH-101-V1)
+  vCode: { 
+    type: String, 
+    description: 'মেইন পিসিওড + V1, V2 (যেমন: TSH-101-V1)' 
+  },
   color: { type: String },
-  size: { type: String },
-  stock: { type: Number, default: 0 },
-  image: { type: String }, // ওই ভেরিয়েন্টের নির্দিষ্ট ছবি
-  additionalImages: [String], // ওই কালারের অন্যান্য ভিউ (সোয়াইপ করার জন্য)
-  isHide: { type: Boolean, default: false },
+  image: { type: String }, // ওই ভেরিয়েন্টের নির্দিষ্ট ছবি
+  additionalImages: [String], // ওই কালারের অন্যান্য ভিউ (সোয়াইপ করার জন্য)
   
-  // ব্ল্যাঙ্ক ফর্মের জন্য স্বতন্ত্র প্রাইস (যদি মেইন প্রোডাক্ট থেকে আলাদা হয়)
+  // ব্ল্যাঙ্ক ফর্মের জন্য স্বতন্ত্র তথ্য (মেইন প্রোডাক্ট থেকে আলাদা হলে এখানে সেভ হবে)
   priceQR: { type: Number, default: 0 }, 
   priceBDT: { type: Number, default: 0 },
+  description: { type: String }, // এই ভেরিয়েন্টের জন্য আলাদা বর্ণনা
   
-  // তুই যদি চাস এক কালারের আন্ডারে অনেক সাইজ হবে, তবে এই 'sizes' অ্যারেটা কাজে লাগবে
+  // সাইজ এবং স্টকের হিসাব
   sizes: [
     {
       size: { type: String },
       stock: { type: Number, default: 0 }
     }
-  ]
+  ],
+  
+  countInStock: { 
+    type: Number, 
+    default: 0,
+    description: 'ওই কালারের বা ভেরিয়েন্টের টোটাল স্টক'
+  },
+
+  isSelfFeature: { 
+    type: Boolean, 
+    default: false,
+    description: 'যদি true হয়, তবে এটি মেইন প্রোডাক্টের ডাটা না দেখিয়ে নিজের ডাটা দেখাবে'
+  },
+  
+  isHide: { type: Boolean, default: false }
 });
+
 
 // মেইন প্রোডাক্ট স্কিমা
 const productSchema = mongoose.Schema(
